@@ -109,6 +109,12 @@ void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
 }
 
+
+void sendMessage(int sock, char message[]) {
+    send(sock, message, strlen(message), 0);
+}
+
+
 ////////////////////////////////////////
 /// MAIN
 ////////////////////////////////////////
@@ -137,6 +143,10 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
+		sendMessage(sock, "1");
+
+		printf("Train authentifié \n");
+		
 		//Definition d'une variable de type message can
 		uCAN1_MSG recCanMsg;
 		
@@ -162,13 +172,13 @@ int main(int argc, char *argv[])
 		printf("PROGRAMME DE TEST DE L'AVANCE D'UN TRAIN !!! \n");
 
 		
-		/* Creation du descripteur de port a utilise pour communiquer sur le bus CAN */
+		// Creation du descripteur de port a utilise pour communiquer sur le bus CAN
 		canPort = canLinux_init_prio(NomPort);
 		// Mise en place d'un filtre
 		canLinux_initFilter(rfilter, sizeof(rfilter));
 	
 		// Deverouillage de la limite de vitesse autorisee
-		WriteVitesseLimite(MAX_CONSIGNE_VITESSE_AUTORISEE);
+		WriteVitesseLimite(MAX_CONSIGNE_VITESSE_AUTORISEE);+
 		usleep(150000); //150ms
 		
 		while(train1.distance < DISTANCE_PARCOURS)
@@ -189,7 +199,6 @@ int main(int argc, char *argv[])
 		//fermeture du port CAN
 		canLinux_close();
 		printf("FIN DU PROGRAMME D'AVANCE DU TRAIN !!!\n");
-
 
 		return 0;
 	}
