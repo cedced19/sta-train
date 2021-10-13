@@ -5,13 +5,31 @@
 #define MAX_REQUEST 5
 
 #include <stdlib.h>
+#include <assert.h>
 
-typedef struct T_elt T_elt;
-struct T_elt
-{
-    char* msg;
-    T_elt *suivant;
-};
+#ifndef DEBUG
+#define CHECK_IF(stat, val, msg)    \
+	if ( (stat) == (val) )          \
+	{                               \
+		perror(msg);                \
+		exit(EXIT_FAILURE);       \
+    }                       
+#else
+#define CHECK_IF(stat, val, msg)    \
+	if ( (stat) == (val) )          \
+	{                               \
+    	perror(msg);                \
+		exit(EXIT_FAILURE);       \
+    }                               \
+    else printf("%s ... OK\n", msg)
+#endif
+
+
+typedef char * T_elt;
+
+char * toString(T_elt e) {
+	return e; 
+}
 
 typedef struct node {
 	T_elt data;
