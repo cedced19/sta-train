@@ -17,13 +17,14 @@ void* connection_handler(void *socket_desc)
     if((read_size = recv(sock , message , MAXLEN , 0))>0){
         puts(message);
     }
+    return NULL;
 }
 
 int main()
 {
     pthread_t thread;
 
-    int sock, length;
+    int sock;
     struct sockaddr_in server, client;
 
     /* Create socket */

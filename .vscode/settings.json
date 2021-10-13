@@ -2,5 +2,6 @@
     "files.associations": {
         "*.rmd": "markdown",
         "loco_parametres.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
