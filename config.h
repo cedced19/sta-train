@@ -1,6 +1,10 @@
 #ifndef CONF_H
 #define CONF_H
 
+#define SEPARATOR ":"
+#define MESSAGE_END "$$"
+#define MAX_MSG_SIZE 1024
+
 #define PORT_NUMBER 4242
 #define MAX_REQUEST 5
 
@@ -25,7 +29,7 @@
 #endif
 
 
-typedef char * T_elt;
+typedef char* T_elt;
 
 char * toString(T_elt e) {
 	return e; 
@@ -63,7 +67,7 @@ T_node * addNode (T_elt e, T_node * n) {
 
 void showList(T_list l) {
 	while(l != NULL) {
-		printf("%s ", toString(l->data));
+		printf("%s \n", toString(l->data));
 		l = l->pNext; 
 	}
 }
@@ -110,6 +114,69 @@ T_list tailAddNode(T_elt e, T_list l){
 		lAux->pNext=pNode;               //ajout de la node en bout de liste
 		return l;
 	}
+}
+
+char * intToString(int n) {
+	static char buffer[11];
+	sprintf(buffer, "%d", n); 
+	return buffer; 
+}
+
+int sendData(int socket, int code, int id, int position, int speed) {
+	char data[MAX_MSG_SIZE] = "";
+    strcat(data, intToString(code));
+	strcat(data, SEPARATOR);
+	strcat(data, intToString(id));
+    strcat(data, SEPARATOR);
+	strcat(data, intToString(position));
+    strcat(data, SEPARATOR);
+    strcat(data, intToString(speed));
+    strcat(data, MESSAGE_END);
+
+    if (send(socket, data, strlen(data),MSG_NOSIGNAL) < 0) {
+        perror("Error writing message to socket");
+        return -1;
+    } else {
+        printf("Sending the following message : %s\n", data);
+        return 1;
+    }
+    return -1;
+} 
+
+
+// parse the receive message to extract a single message for later exploitation
+T_list getOneMessage(T_list list, char data[]) {
+    char* token;
+    int i = 0;
+
+    // get first message 
+    token = strtok(data, MESSAGE_END); // cut in two parts
+	
+    list = addNode(token, list);
+
+    // get all remaining messages from token
+    while( token != NULL ) {
+        token = strtok(NULL, MESSAGE_END);
+		if (token != NULL) {
+			list = addNode(token, list);
+		}
+        
+    }
+	return list;
+}
+
+void parseMessage(char data[], int* code, int* id, int* position, int* speed) {
+	char *ptr;
+	char delim[] = SEPARATOR;
+
+	ptr = strtok(data, delim);
+	*code = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	*id = atoi(ptr);
+	ptr = strtok(NULL, delim);
+	*position = atoi(ptr);
+	ptr = strtok(NULL, MESSAGE_END);
+	*speed = atoi(ptr);
 }
 
 #endif

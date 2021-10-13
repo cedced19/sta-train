@@ -6,6 +6,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include  "../config.h"
+
+#define TRAIN_ID 1
 
 #define DISTANCE_PARCOURS 700 // Avance max d'un train pour le test
 
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
-		sendMessage(sock, "1");
+		sendData(sock, 5, TRAIN_ID, -1, -1);
 
 		printf("Train auth OK \n");
 		

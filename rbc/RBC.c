@@ -14,8 +14,25 @@ void* connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     char message[MAXLEN];
     int read_size;
+    T_list list = NULL;
+    int code;
+    int id;
+    int position;
+    int speed;
     if((read_size = recv(sock , message , MAXLEN , 0))>0){
-        puts(message);
+        
+        //puts(message);
+        
+    
+        list = getOneMessage(list,message);
+        // showList(list);
+        parseMessage(message, &code, &id, &position, &speed);
+        /*
+        printf("Code %d\n",code);
+        printf("Id %d\n",id);
+        printf("Position %d\n",position);
+        printf("Speed %d\n",speed);
+        */
     }
     return NULL;
 }
