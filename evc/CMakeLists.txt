@@ -13,7 +13,7 @@ ${PATH_LIB_UNIRAIL}CAN/canLinux.c
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_Utilitaire.c
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_VarStatusTrain.c
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_VarTrain.c
-avance_train.c
+EVC.c
 )
 
 set(HEADERS
@@ -24,9 +24,10 @@ ${PATH_LIB_UNIRAIL}CAN/MESCAN1_DefinitionVariable.h
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_ID&DLC_LOCO.h
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_VarStatusTrain.h
 ${PATH_LIB_UNIRAIL}CAN/MESCAN1_VarTrain.h
+../config.h
 )
-set (EXECSRC avance_train.c)
-set (EXECUTABLE avance_train.exe)
+set (EXECSRC EVC.c)
+set (EXECUTABLE EVC.exe)
 
 set(SRCS ${SRCS} ${EXECSRC} )
 add_executable(${EXECUTABLE} ${SRCS} ${HEADERS})

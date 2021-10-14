@@ -41,7 +41,7 @@ typedef struct node {
 } T_node, * T_list;
 
 
-T_node * addNode (T_elt e, T_node * n);
+T_node * addNode (T_elt e, T_node * node);
 void showList(T_list l);
 void freeList(T_list l);
 T_elt getFirstElt(T_list l);
@@ -57,10 +57,10 @@ static T_node * newNode(T_elt e) {
 }
 
 
-T_node * addNode (T_elt e, T_node * n) {
+T_node * addNode (T_elt e, T_node * node) {
 	T_node * pNode; 
 	pNode = newNode(e); 
-	pNode->pNext = n; 
+	pNode->pNext = node; 
 	return pNode;
 }
 
@@ -116,9 +116,9 @@ T_list tailAddNode(T_elt e, T_list l){
 	}
 }
 
-char * intToString(int n) {
+char * intToString(int node) {
 	static char buffer[11];
-	sprintf(buffer, "%d", n); 
+	sprintf(buffer, "%d", node); 
 	return buffer; 
 }
 
