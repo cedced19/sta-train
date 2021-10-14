@@ -25,12 +25,6 @@ typedef struct TrainInfo
 	int nb_impulsions;
 }TrainInfo;
 
-unsigned char status, varDebug1, varDebug2;
-
-void sendMessage(int sock, char message[]) {
-    send(sock, message, strlen(message), 0);
-}
-
 int main(int argc, char *argv[])
 {
 	if (N_ARG(2)) {
