@@ -14,7 +14,7 @@
 
 #define TRAIN_ID 1
 
-#define DISTANCE_PARCOURS 700 // Avance max d'un train pour le test
+#define position_PARCOURS 700 // Avance max d'un train pour le test
 
 #define CHECK_ERROR_DIFFERENT(msg,val1,val2) if (val1 != val2) { perror(msg); exit(-1); }
 #define CHECK_ERROR_EQUAL(msg,val1,val2) if (val1 == val2) { perror(msg); exit(-1); }
@@ -23,7 +23,7 @@
 //Definition d'un type train data
 typedef struct TrainInfo
 {
-	float distance;  // en cm
+	float position;  // en cm
 	float vit_consigne;
 	int vit_mesuree;
 	int nb_impulsions;
@@ -106,9 +106,9 @@ void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
         infos-> vit_mesuree= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);/** le nbre d'implusion envoyé ici
 		// est le nombre d'impulsion entre 2 mesures **/
 		infos-> nb_impulsions+= infos-> vit_mesuree;
-        infos-> distance= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
+        infos-> position= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
 		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
-		printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> distance, infos-> vit_mesuree);
+		printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
 	}
 	else 
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
@@ -120,7 +120,25 @@ void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
 ///////////////////////////////////////////
 void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 {		 
-	printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
+	if (recCanMsg->frame.id==MC_ID_SCHEDULEUR_MESURES) {
+		// Envoi la vitesse instantannée (consigne vitesse) ,	le nombre d''impulsions, la vitesse mesurée, l'erreur du PID
+
+		if(MESCAN_GetData8(recCanMsg, cdmc_ordonnancementId)==MC_ID_RP1_STATUS_RUN) {
+			//WriteTrameStatusRUNRP1(status, varDebug1, varDebug2);
+			// je ne sais pas pourquoi mais cela éteint le raspberry
+		}
+		infos-> vit_mesuree= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);
+		// le nbre d'implusion envoyé ici
+		// est le nombre d'impulsion entre 2 mesures 
+		infos-> nb_impulsions+= infos-> vit_mesuree;
+        infos-> position= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
+		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
+		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
+			
+	} else {
+		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
+	}
+	
 }
 
 //////////////////////////////////////////
@@ -139,7 +157,7 @@ void* getCANMsg(void* arg){
 
 	//int consigne_rbc=20;
 
-	train1.distance = 0;
+	train1.position = 0;
 	train1.vit_consigne = 0;
 	train1.nb_impulsions = 0;
 	train1.vit_mesuree = 0;
