@@ -27,12 +27,12 @@ void* connection_handler(void *socket_desc)
         list = getOneMessage(list,message);
         // showList(list);
         parseMessage(message, &code, &id, &position, &speed);
-        /*
+        
         printf("Code %d\n",code);
         printf("Id %d\n",id);
         printf("Position %d\n",position);
         printf("Speed %d\n",speed);
-        */
+    
     }
     return NULL;
 }
