@@ -1,15 +1,15 @@
 test-serveur:
 	@echo "Lancement du serveur"
-	cd RBC/ && make test
+	cd rbc/ && make test
 
 test-client: 
 	@echo "Lancement du client"
-	cd EVC/ && make test
+	cd evc/ && make test
 
 test-client-fake: 
 	@echo "Lancement du client"
-	cd EVC/ && make test-fake
+	cd evc/ && make test-fake
 
 clean: 
 	@echo "Cleaning..."
-	cd RBC/ && make clean && cd ../EVC/ && make clean
+	cd rbc/ && make clean && cd ../evc/ && make clean
