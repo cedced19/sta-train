@@ -134,10 +134,11 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
         infos-> position= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
 		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
 		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
-	} else if (recCanMsg->frame.id==MC_ID_BAL_STATUS_RUN) {
-		printf("%i", MESCAN_GetData8(recCanMsg, cdmc_BAL_lastNumberOfDetectedBali));
+	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
+		printf("Balise numéro %X\n", recCanMsg->frame.data5);
 	} else {
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
+		
 	}
 	
 }
@@ -150,14 +151,15 @@ void* getCANMsg(void* arg){
 	uCAN1_MSG recCanMsg;
 	int canPort;
 	char *NomPort = "can0";
-	struct can_filter rfilter[3]; 
-	rfilter[0].can_id   = 0x02F;
+	struct can_filter rfilter[2]; 
+	
+	// Get mesures
+	rfilter[0].can_id   = MC_ID_SCHEDULEUR_MESURES;
 	rfilter[0].can_mask = CAN_SFF_MASK;
 	
-	rfilter[1].can_id   = 0x033;
+	// Get balise
+	rfilter[1].can_id   = MC_ID_EBTL2_RECEIVED;
 	rfilter[1].can_mask = CAN_SFF_MASK;
-	rfilter[2].can_id   = MC_ID_BAL_STATUS_RUN;
-	rfilter[2].can_mask = CAN_SFF_MASK;
 
 	//int consigne_rbc=20;
 

@@ -147,7 +147,6 @@ int sendData(int socket, int code, int id, int position, int speed) {
 // parse the receive message to extract a single message for later exploitation
 T_list getOneMessage(T_list list, char data[]) {
     char* token;
-    int i = 0;
 
     // get first message 
     token = strtok(data, MESSAGE_END); // cut in two parts
