@@ -19,26 +19,34 @@ void* connection_handler(void *socket_desc)
     int id;
     int position;
     int speed;
-    if((read_size = recv(sock , message , MAXLEN , 0))>0){
+    while(1) {
+        if((read_size = recv(sock , message , MAXLEN , 0))>0){
         
         //puts(message);
         
     
-        list = getOneMessage(list,message);
-        // tant que la list != NULL 
-        // showList(list);
-        parseMessage(list->data, &code, &id, &position, &speed);
+            list = getOneMessage(list,message);
+            while (list !=NULL) {
+                // tant que la list != NULL 
+                // showList(list);
+                parseMessage(list->data, &code, &id, &position, &speed);
+                
+                printf("Code %d\n",code);
+                printf("Id %d\n",id);
+                printf("Position %d\n",position);
+                printf("Speed %d\n",speed);
+
+                sendData(sock, 2, id, -1, -1);
+                
+                // sendToGUI(list->data)
+                list = removeFirstNode(list);
+            }
         
-        printf("Code %d\n",code);
-        printf("Id %d\n",id);
-        printf("Position %d\n",position);
-        printf("Speed %d\n",speed);
-        
-        // sendToGUI(list->data)
-        list = removeFirstNode(list);
 
         // recommance avec while
+        }
     }
+    
     return NULL;
 }
 
