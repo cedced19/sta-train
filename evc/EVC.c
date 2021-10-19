@@ -27,6 +27,7 @@ typedef struct TrainInfo
 	float vit_consigne;
 	int vit_mesuree;
 	int nb_impulsions;
+	int positionDone;
 }TrainInfo;
 
 struct TrainInfo train1;
@@ -136,6 +137,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
 	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
 		printf("Balise numéro %X\n", recCanMsg->frame.data5);
+		infos->positionDone = 1;
 	} else {
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
 		
@@ -162,11 +164,6 @@ void* getCANMsg(void* arg){
 	rfilter[1].can_mask = CAN_SFF_MASK;
 
 	//int consigne_rbc=20;
-
-	train1.position = 0;
-	train1.vit_consigne = 0;
-	train1.nb_impulsions = 0;
-	train1.vit_mesuree = 0;
 
     /* Start CAN bus connexion */
     canPort = canLinux_init_prio(NomPort);
@@ -203,6 +200,14 @@ int main(int argc, char *argv[])
         int serverPort = atoi(argv[2]);
         int sock;
 		
+		train1.position = 0;
+		train1.vit_consigne = 0;
+		train1.nb_impulsions = 0;
+		train1.vit_mesuree = 0;
+		train1.positionDone = 0;
+
+
+		// thread to handle CAN messages
 		pthread_t thread;
     	pthread_create(&thread, NULL, getCANMsg, NULL);
 
@@ -224,7 +229,14 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
-		sendData(sock, 5, TRAIN_ID, -1, -1);
+		sendData(sock, 1, TRAIN_ID, -1, -1);
+
+		// Need to wait for auth
+		while (train1.positionDone == 0) {
+			WriteVitesseConsigne(8,1);
+			sleep(1);
+		}
+		WriteVitesseConsigne(0,1);
 
 		printf("Train auth OK \n");
 		

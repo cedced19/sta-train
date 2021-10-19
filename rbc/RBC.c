@@ -25,14 +25,19 @@ void* connection_handler(void *socket_desc)
         
     
         list = getOneMessage(list,message);
+        // tant que la list != NULL 
         // showList(list);
-        parseMessage(message, &code, &id, &position, &speed);
+        parseMessage(list->data, &code, &id, &position, &speed);
         
         printf("Code %d\n",code);
         printf("Id %d\n",id);
         printf("Position %d\n",position);
         printf("Speed %d\n",speed);
-    
+        
+        // sendToGUI(list->data)
+        list = removeFirstNode(list);
+
+        // recommance avec while
     }
     return NULL;
 }
