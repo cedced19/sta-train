@@ -120,7 +120,9 @@ void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
 /// Lecture des trames CAN
 ///////////////////////////////////////////
 void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
-{		 
+{	
+	int baliseCode;
+	int positionFromBalise = -1;
 	if (recCanMsg->frame.id==MC_ID_SCHEDULEUR_MESURES) {
 		// Envoi la vitesse instantannée (consigne vitesse) ,	le nombre d''impulsions, la vitesse mesurée, l'erreur du PID
 
@@ -132,12 +134,48 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		// le nbre d'implusion envoyé ici
 		// est le nombre d'impulsion entre 2 mesures 
 		infos-> nb_impulsions+= infos-> vit_mesuree;
-        infos-> position= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
+        infos-> position+= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
 		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
 		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
+		printf("Position: %lf\n", infos-> position);
 	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
-		printf("Balise numéro %X\n", recCanMsg->frame.data5);
+		//printf("Balise numéro %X\n", recCanMsg->frame.data5);
 		infos->positionDone = 1;
+		baliseCode = recCanMsg->frame.data5;
+		switch(baliseCode) {
+			case 1:
+				positionFromBalise = 0;
+				break;
+			case 2:
+				positionFromBalise = 1671;
+				break;
+			case 3:
+				positionFromBalise = 1898 + 1671;
+				break;
+			case 4:
+				positionFromBalise = 1898 + 1671 + 2264;
+				break;
+			case 5:
+				positionFromBalise = 1898 + 1671 + 2264 + 1617;
+				break;
+			case 6:
+				positionFromBalise = 1898 + 1671 + 2264 + 1617 + 1612;
+				break;
+			case 7:
+				positionFromBalise = 1898 + 1671 + 2264 + 1617 + 1612 + 2134;
+				break;
+			case 8:
+				positionFromBalise = 1898 + 1671 + 2264 + 1617 + 1612 + 2134 + 1835;
+				break;
+			case 9:
+				positionFromBalise = 1898 + 1671 + 2264 + 1617 + 1612 + 2134 + 1835 + 1628;
+				break;
+		}
+		//printf("Postion donné par balise %i\n", positionFromBalise);
+		if (positionFromBalise != -1) {
+			infos->position = positionFromBalise;
+			infos-> nb_impulsions = 0;
+		}
 	} else {
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
 		
@@ -196,9 +234,18 @@ void* getCANMsg(void* arg){
 int main(int argc, char *argv[])
 {
 	if (N_ARG(2)) {
+		char data[MAX_MSG_SIZE];
+		int readStatus;
 		char *serverIp = argv[1];
         int serverPort = atoi(argv[2]);
         int sock;
+		T_list list = NULL;
+
+		// Message parsed
+		int code;
+		int id;
+		int position;
+		int speed;
 		
 		train1.position = 0;
 		train1.vit_consigne = 0;
@@ -229,16 +276,62 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
-		sendData(sock, 1, TRAIN_ID, -1, -1);
+		if (train1.positionDone == 0) {
+			sendData(sock, 1, TRAIN_ID, -1, 0);
+		} else {
+			sendData(sock, 1, TRAIN_ID, train1.position, 0);
+		}
+		
 
 		// Need to wait for auth
-		while (train1.positionDone == 0) {
-			WriteVitesseConsigne(8,1);
-			sleep(1);
-		}
-		WriteVitesseConsigne(0,1);
+		printf("Wait for auth\n");
+		while (1) {
+			data[0] = '\0';
+            memset(data, 0, sizeof(data));
+            readStatus = read(sock, data, MAX_MSG_SIZE);
+			if (readStatus < 0) {
+                perror("Error while reading");
+            } else if (readStatus == 0) {
+                perror("Connection closed while reading");
+                break;
+            } else {
+				list = getOneMessage(list,data);
+				while (list !=NULL) {
 
-		printf("Train auth OK \n");
+					parseMessage(list->data, &code, &id, &position, &speed);
+					/*
+					printf("Code %d\n",code);
+					printf("Id %d\n",id);
+					printf("Position %d\n",position);
+					printf("Speed %d\n",speed);
+					*/
+					switch (code) {
+						case 2:
+							printf("Train auth OK \n");
+							if (train1.positionDone == 0) {
+								printf("Looking for balise\n");
+								while (train1.positionDone == 0) {
+									WriteVitesseConsigne(8,1);
+									sleep(1);
+								}
+								printf("One balise located\n");
+								WriteVitesseConsigne(0,1);
+								sendData(sock, 2, id, train1.position, train1.vit_mesuree);
+							} else {
+								printf("Nothing to do\n");
+								WriteVitesseConsigne(0,1);
+							}
+							break;
+					}
+
+					//sendData(sock, 2, id, -1, -1);
+					
+					// sendToGUI(list->data)
+					list = removeFirstNode(list);
+				}
+			}
+		}
+
 		
 		// Join threads
 		pthread_join(thread, NULL);
