@@ -32,6 +32,7 @@ void sig_handler(int signo)
 {
     if (signo == SIGINT) {
         printf("received SIGINT\n");
+		train1.emergencyStop = 1;
         stopTrain();
         exit(0);
     }
@@ -148,7 +149,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
         infos-> position+= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
 		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
 		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
-		printf("Position: %lf\n", infos-> position);
+		//printf("Position: %lf\n", infos-> position);
 	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
 		//printf("Balise numéro %X\n", recCanMsg->frame.data5);
 		infos->positionDone = 1;
@@ -263,99 +264,118 @@ int main(int argc, char *argv[])
 		train1.nb_impulsions = 0;
 		train1.vit_mesuree = 0;
 		train1.positionDone = 0;
+		train1.emergencyStop = 0;
+
+		struct sockaddr_in addr_rbc;
+		pthread_t threadCAN;
 		
 		// Stop train when stopping program
 		if (signal(SIGINT, sig_handler) == SIG_ERR)
         	printf("Cannot catch signal SIGINT\n");
 
+
 		// thread to handle CAN messages
-		pthread_t thread;
-    	pthread_create(&thread, NULL, getCANMsg, NULL);
+    	pthread_create(&threadCAN, NULL, getCANMsg, NULL);
 
-        struct sockaddr_in addr_rbc;
-		printf("Connection...\n");
-		// Création de la socket
-        sock = socket(AF_INET, SOCK_STREAM, 0);
-        CHECK_ERROR_EQUAL("Impossible de créer une socket", sock, -1);
-		printf("Socket OK \n");
-		bzero(&addr_rbc, sizeof(addr_rbc));
+        do {
+			printf("Connection...\n");
+			// Create socket
+			sock = socket(AF_INET, SOCK_STREAM, 0);
+			if (sock == -1) {
+				perror("Impossible de se connecter");
+				continue;
+			}
+			printf("Socket OK \n");
 
-		
-        // Define port and ip address
-        addr_rbc.sin_family = AF_INET;
-        addr_rbc.sin_addr.s_addr = inet_addr(serverIp);
-        addr_rbc.sin_port = htons(serverPort);
 
-		CHECK_ERROR_DIFFERENT("Impossible de se connecter au serveur", connect(sock, (struct sockaddr*)&addr_rbc, sizeof(addr_rbc)), 0);
-		
-		printf("Connection OK \n");
+			bzero(&addr_rbc, sizeof(addr_rbc));
 
-		if (train1.positionDone == 0) {
-			sendData(sock, 1, TRAIN_ID, -1, 0);
-		} else {
-			sendData(sock, 1, TRAIN_ID, train1.position, 0);
-		}
-		
+			
+			// Define port and ip address
+			addr_rbc.sin_family = AF_INET;
+			addr_rbc.sin_addr.s_addr = inet_addr(serverIp);
+			addr_rbc.sin_port = htons(serverPort);
 
-		// Need to wait for auth
-		printf("Wait for auth\n");
-		while (1) {
-			data[0] = '\0';
-            memset(data, 0, sizeof(data));
-            readStatus = read(sock, data, MAX_MSG_SIZE);
-			if (readStatus < 0) {
-                perror("Error while reading");
-            } else if (readStatus == 0) {
-                perror("Connection closed while reading");
-                break;
-            } else {
-				list = getOneMessage(list,data);
-				while (list !=NULL) {
+			if (connect(sock, (struct sockaddr*)&addr_rbc, sizeof(addr_rbc)) != 0) {
+				perror("Unable to connect to the RBC");
+				continue;
+			}
 
-					parseMessage(list->data, &code, &id, &position, &speed);
-					/*
-					printf("Code %d\n",code);
-					printf("Id %d\n",id);
-					printf("Position %d\n",position);
-					printf("Speed %d\n",speed);
-					*/
-					if (id != TRAIN_ID) {
-						continue;
-					}
+			printf("Connection OK \n");
 
-					switch (code) {
-						case 2:
-							printf("Train auth OK \n");
-							if (train1.positionDone == 0) {
-								printf("Looking for balise\n");
-								while (train1.positionDone == 0) {
-									WriteVitesseConsigne(8,1);
-									sleep(1);
+			if (train1.positionDone == 0) {
+				sendData(sock, 1, TRAIN_ID, -1, 0);
+			} else {
+				sendData(sock, 1, TRAIN_ID, train1.position, 0);
+			}
+			
+
+			// Need to wait for auth
+			printf("Wait for auth\n");
+			while (1) {
+				data[0] = '\0';
+				memset(data, 0, sizeof(data));
+				readStatus = read(sock, data, MAX_MSG_SIZE);
+				if (readStatus < 0) {
+					perror("Error while reading");
+				} else if (readStatus == 0) {
+					perror("Connection closed while reading");
+					break;
+				} else {
+					list = getOneMessage(list,data);
+					while (list !=NULL) {
+
+						parseMessage(list->data, &code, &id, &position, &speed);
+
+						// Debug info
+						/*
+						printf("Code %d\n",code);
+						printf("Id %d\n",id);
+						printf("Position %d\n",position);
+						printf("Speed %d\n",speed);
+						*/
+
+						if (id != TRAIN_ID) {
+							list = removeFirstNode(list);
+							continue;
+						}
+
+						switch (code) {
+							case 2:
+								printf("Train auth OK \n");
+								if (train1.positionDone == 0) {
+									printf("Looking for balise\n");
+									while (train1.positionDone == 0 && train1.emergencyStop == 0) {
+										WriteVitesseConsigne(8,1);
+										sleep(1);
+									}
+									printf("One balise located\n");
+									WriteVitesseConsigne(0,1);
+									sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.vit_mesuree);
+								} else {
+									printf("Nothing to do\n");
+									WriteVitesseConsigne(0,1);
 								}
-								printf("One balise located\n");
-								WriteVitesseConsigne(0,1);
-								sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.vit_mesuree);
-							} else {
-								printf("Nothing to do\n");
-								WriteVitesseConsigne(0,1);
-							}
-							break;
-						case 6:
-							WriteVitesseConsigne(speed, 1);
-							break;
-					}
+								break;
+							case 6:
+								WriteVitesseConsigne(speed, 1);
+								break;
+							case 99:
+								stopTrain();
+								break;
+						}
 
-					//sendData(sock, 2, id, -1, -1);
-					
-					// sendToGUI(list->data)
-					list = removeFirstNode(list);
+						//sendData(sock, 2, id, -1, -1);
+						
+						// sendToGUI(list->data)
+						list = removeFirstNode(list);
+					}
 				}
 			}
-		}
-
+		} while(1);
 		
 		// Join threads
-		pthread_join(thread, NULL);
+		pthread_join(threadCAN, NULL);
 
 		return 0;
 	} else {
