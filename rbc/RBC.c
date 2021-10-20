@@ -9,45 +9,118 @@
 
 #define MAXLEN 500
 
-void* connection_handler(void *socket_desc)
-{
+Train *trains=NULL;
+
+void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
     char message[MAXLEN];
     int read_size;
     T_list list = NULL;
     int code;
     int id;
-    int position;
+    int pos;
     int speed;
-    while(1) {
-        if((read_size = recv(sock , message , MAXLEN , 0))>0){
-        
-        //puts(message);
-        
-    
-            list = getOneMessage(list,message);
-            while (list !=NULL) {
-                // tant que la list != NULL 
-                // showList(list);
-                parseMessage(list->data, &code, &id, &position, &speed);
-                
-                printf("Code %d\n",code);
-                printf("Id %d\n",id);
-                printf("Position %d\n",position);
-                printf("Speed %d\n",speed);
 
-                sendData(sock, 2, id, -1, -1);
+    do {
+            int read = read_size = recv(sock , message , MAXLEN , 0);
+            if (read < 0) {
+                    perror("Reading stream message");
+            } else if (read == 0) {
+                perror("Ending connection\n");
+                break;
+            } else {
+                do {
+                    list = getOneMessage(list,message);
+                    parseMessage(message, &code, &id, &pos, &speed);
+                    printf("Responding new message from %i with code %i\n", id, code);
+                    switch(code){
+                        case 1: // receive position/speed
+                            // store data
+                            printf("Received initialization from train %i\n", id);
+                            trains=storeData(id,pos,speed,trains);
+                            sendData(sock, 2, id, pos, speed); //send ack 
+                            showTrains(trains);
+                            break;
+                        case 3 : // send command
+                            printf("Received position from train %i\n", id);
+                            trains=storeData(id,pos,speed,trains);
+                            showTrains(trains);
+                            sendData(sock, 6, id, pos, 40); //send ack 
+                            break;
+                        default:
+                            break;
+                    }
+                    //showTrains(trains);
+                    
+                    list = removeFirstNode(list);
+                    //showList(list);
+                    printf("Message done!\n");
                 
-                // sendToGUI(list->data)
-                list = removeFirstNode(list);
+                } while(list!=NULL);
             }
-        
+    } while(1);
+    return NULL;
+}
 
-        // recommance avec while
+
+static Train * newTrain(int id, int pos, int speed) {
+	Train * train; 
+	CHECK_IF(train = malloc(sizeof(Train)), NULL, "malloc allocateNode"); 
+	train->id = id; 
+	train->pos = pos; 
+	train->speed = speed; 
+	train->nextTrain = NULL;
+
+	return train;
+}
+
+
+Train * addTrain (int id, int pos, int speed, Train *trains) {
+	Train * train; 
+	train = newTrain(id, pos, speed); 
+	train->nextTrain = trains; 
+	return train;
+}
+
+void showTrains(Train *trains) {
+	while(trains!= NULL) {
+		printf(" => Train numéro : %d \n",trains->id);
+        printf("  --------------------\n");
+		printf("\tpos : %d \n",trains->pos);
+		printf("\tspeed : %d \n\n",trains->speed);
+		trains= trains->nextTrain; 
+	}
+}
+
+Train * selectTrain (int id_train, Train *trains) {
+    Train *trainscp = trains;
+    while(trains!=NULL && id_train!=trains->id){
+        trains=trains->nextTrain;
+    }
+    if(trains==NULL) trains=addTrain(id_train,-1,-1,trainscp);
+    return trains;
+} 
+
+void * storeData(int id_train, int pos, int speed, Train * trains){
+    trains=selectTrain(id_train, trains);
+    trains->pos=pos;
+    trains->speed=speed;
+    showTrains(trains);
+    return NULL;
+}
+
+int calcDistance(int id_train){
+    Train *train1 = selectTrain(id_train, trains);
+    // chercher le train suivant (position sup, à un tour pres)
+    int distmin;
+    while(trains!=NULL){
+        if(trains->id!=id_train){
+            if(abs(train1->pos - trains->pos)<distmin) distmin=abs(train1->pos - trains->pos);
+            if(abs(train1->pos - trains->pos + DISTTOUR)<distmin) distmin=abs(train1->pos - trains->pos + DISTTOUR);
+            if(abs(train1->pos - trains->pos - DISTTOUR)<distmin) distmin=abs(train1->pos - trains->pos - DISTTOUR);
         }
     }
-    
-    return NULL;
+    return distmin;
 }
 
 int main()
@@ -79,6 +152,7 @@ int main()
     puts("Listening");
     int c = sizeof(struct sockaddr_in);
     int new_socket;
+    trains=addTrain(0,-1,-1,NULL);
 
     while ((new_socket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)))
     {
