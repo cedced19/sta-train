@@ -7,6 +7,7 @@ typedef struct TrainInfo
 	int vit_mesuree;
 	int nb_impulsions;
 	int positionDone;
+    int emergencyStop;
 }TrainInfo;
 
 void sig_handler(int signo);
