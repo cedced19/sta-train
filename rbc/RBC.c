@@ -26,6 +26,7 @@ void* connection_handler(void *socket_desc){
             if (read < 0) {
                     perror("Reading stream message");
             } else if (read == 0) {
+                // TODO remove train
                 perror("Ending connection\n");
                 break;
             } else {
