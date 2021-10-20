@@ -6,9 +6,10 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <pthread.h>
-
+#include <signal.h>
 #include "Libs_Unirail/CAN/canLinux.h"
 #include "Libs_Unirail/CAN/loco_Parametres.h"
+#include "EVC.h"
 
 #include  "../config.h"
 
@@ -20,19 +21,29 @@
 #define CHECK_ERROR_EQUAL(msg,val1,val2) if (val1 == val2) { perror(msg); exit(-1); }
 #define N_ARG(x) (argc == x) || ((argc == x + 1) && (argv[argc] == NULL))
 
-//Definition d'un type train data
-typedef struct TrainInfo
-{
-	float position;  // en cm
-	float vit_consigne;
-	int vit_mesuree;
-	int nb_impulsions;
-	int positionDone;
-}TrainInfo;
-
 struct TrainInfo train1;
 
 unsigned char status, varDebug1, varDebug2;
+
+//////////////////////////////////////////
+/// Signal handler
+///////////////////////////////////////////
+void sig_handler(int signo)
+{
+    if (signo == SIGINT) {
+        printf("received SIGINT\n");
+        stopTrain();
+        exit(0);
+    }
+}
+
+//////////////////////////////////////////
+/// Stop train
+///////////////////////////////////////////
+void stopTrain(void) {
+    printf("Stop train");
+    WriteVitesseConsigne(0, 1);
+}
 
 //////////////////////////////////////////
 /// Ecriture de la Trame vitesse limite
@@ -186,7 +197,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 //////////////////////////////////////////
 /// Gestion des trames CAN
 ///////////////////////////////////////////
-void* getCANMsg(void* arg){
+void* getCANMsg(void* arg) {
 
 	uCAN1_MSG recCanMsg;
 	int canPort;
@@ -252,14 +263,17 @@ int main(int argc, char *argv[])
 		train1.nb_impulsions = 0;
 		train1.vit_mesuree = 0;
 		train1.positionDone = 0;
-
+		
+		// Stop train when stopping program
+		if (signal(SIGINT, sig_handler) == SIG_ERR)
+        	printf("Cannot catch signal SIGINT\n");
 
 		// thread to handle CAN messages
 		pthread_t thread;
     	pthread_create(&thread, NULL, getCANMsg, NULL);
 
         struct sockaddr_in addr_rbc;
-		printf("Connection en cours \n");
+		printf("Connection...\n");
 		// Création de la socket
         sock = socket(AF_INET, SOCK_STREAM, 0);
         CHECK_ERROR_EQUAL("Impossible de créer une socket", sock, -1);
