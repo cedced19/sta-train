@@ -305,6 +305,10 @@ int main(int argc, char *argv[])
 					printf("Position %d\n",position);
 					printf("Speed %d\n",speed);
 					*/
+					if (id != TRAIN_ID) {
+						continue;
+					}
+
 					switch (code) {
 						case 2:
 							printf("Train auth OK \n");
@@ -316,11 +320,14 @@ int main(int argc, char *argv[])
 								}
 								printf("One balise located\n");
 								WriteVitesseConsigne(0,1);
-								sendData(sock, 2, id, train1.position, train1.vit_mesuree);
+								sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.vit_mesuree);
 							} else {
 								printf("Nothing to do\n");
 								WriteVitesseConsigne(0,1);
 							}
+							break;
+						case 6:
+							WriteVitesseConsigne(speed, 1);
 							break;
 					}
 

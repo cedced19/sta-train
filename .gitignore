@@ -1,1 +1,4 @@
 **/**.exe
+evc/CMakeFiles
+evc/cmake_install.cmake
+evc/CMakeCache.txt
