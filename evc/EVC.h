@@ -3,9 +3,9 @@
 typedef struct TrainInfo
 {
 	float position;  // en cm
-	float vit_consigne;
-	int vit_mesuree;
-	int nb_impulsions;
+	float speedInput;
+	int speedMeasured;
+	int nbImpulsions;
 	int positionDone;
     int emergencyStop;
 }TrainInfo;

@@ -30,8 +30,8 @@ unsigned char status, varDebug1, varDebug2;
 ///////////////////////////////////////////
 void sig_handler(int signo)
 {
-    if (signo == SIGINT) {
-        printf("received SIGINT\n");
+    if (signo == SIGINT || signo == SIGQUIT) {
+        printf("Received SIGINT\n");
 		train1.emergencyStop = 1;
         stopTrain();
         exit(0);
@@ -116,12 +116,12 @@ void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		if(MESCAN_GetData8(recCanMsg, cdmc_ordonnancementId)==MC_ID_RP1_STATUS_RUN)
 			WriteTrameStatusRUNRP1(status, varDebug1, varDebug2);
 			
-        infos-> vit_mesuree= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);/** le nbre d'implusion envoyé ici
+        infos-> speedMeasured= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);/** le nbre d'implusion envoyé ici
 		// est le nombre d'impulsion entre 2 mesures **/
-		infos-> nb_impulsions+= infos-> vit_mesuree;
-        infos-> position= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
-		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
-		printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
+		infos-> nbImpulsions+= infos-> speedMeasured;
+        infos-> position= PAS_ROUE_CODEUSE * (infos->nbImpulsions);
+		infos-> speedInput= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
+		printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> speedMeasured);
 	}
 	else 
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
@@ -142,13 +142,12 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 			//WriteTrameStatusRUNRP1(status, varDebug1, varDebug2);
 			// je ne sais pas pourquoi mais cela éteint le raspberry
 		}
-		infos-> vit_mesuree= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);
-		// le nbre d'implusion envoyé ici
-		// est le nombre d'impulsion entre 2 mesures 
-		infos-> nb_impulsions+= infos-> vit_mesuree;
-        infos-> position+= PAS_ROUE_CODEUSE * (infos->nb_impulsions);
-		infos-> vit_consigne= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
-		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> vit_mesuree);
+		infos-> speedMeasured= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);
+
+		infos-> nbImpulsions+= infos-> speedMeasured;
+        infos-> position+= PAS_ROUE_CODEUSE * (infos->nbImpulsions);
+		infos-> speedInput= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
+		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> speedMeasured);
 		//printf("Position: %lf\n", infos-> position);
 	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
 		//printf("Balise numéro %X\n", recCanMsg->frame.data5);
@@ -186,7 +185,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		//printf("Postion donné par balise %i\n", positionFromBalise);
 		if (positionFromBalise != -1) {
 			infos->position = positionFromBalise;
-			infos-> nb_impulsions = 0;
+			infos-> nbImpulsions = 0;
 		}
 	} else {
 		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
@@ -260,9 +259,9 @@ int main(int argc, char *argv[])
 		int speed;
 		
 		train1.position = 0;
-		train1.vit_consigne = 0;
-		train1.nb_impulsions = 0;
-		train1.vit_mesuree = 0;
+		train1.speedInput = 0;
+		train1.nbImpulsions = 0;
+		train1.speedMeasured = 0;
 		train1.positionDone = 0;
 		train1.emergencyStop = 0;
 
@@ -351,7 +350,7 @@ int main(int argc, char *argv[])
 									}
 									printf("One balise located\n");
 									WriteVitesseConsigne(0,1);
-									sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.vit_mesuree);
+									sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
 								} else {
 									printf("Nothing to do\n");
 									WriteVitesseConsigne(0,1);
