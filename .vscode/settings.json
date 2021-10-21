@@ -2,7 +2,8 @@
     "files.associations": {
         "*.rmd": "markdown",
         "loco_parametres.h": "c",
-        "evc.h": "c"
+        "evc.h": "c",
+        "in.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

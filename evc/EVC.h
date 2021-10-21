@@ -8,6 +8,8 @@ typedef struct TrainInfo
 	int nbImpulsions;
 	int positionDone;
     int emergencyStop;
+	int sock;
+	int connected;
 }TrainInfo;
 
 void sig_handler(int signo);

@@ -25,13 +25,33 @@ struct TrainInfo train1;
 
 unsigned char status, varDebug1, varDebug2;
 
+
+int duree;
+struct timeval startPeriod, endPeriod ; 
+//////////////////////////////////////////
+/// Signal handler
+/// SIGALARM
+///////////////////////////////////////////
+void periodSending(int signo) {
+    gettimeofday(&endPeriod,NULL); 
+    duree= (endPeriod.tv_sec*100000+endPeriod.tv_usec)-(startPeriod.tv_sec*100000+startPeriod.tv_usec);
+    printf("Cycle duration %d us",duree);
+	if (train1.connected) {
+		if (train1.positionDone) {
+			sendData(train1.sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+		}
+	}
+    startPeriod=endPeriod;
+} 
+
+
 //////////////////////////////////////////
 /// Signal handler
 ///////////////////////////////////////////
-void sig_handler(int signo)
+void sigHandler(int signo)
 {
     if (signo == SIGINT || signo == SIGQUIT) {
-        printf("Received SIGINT\n");
+        printf("\nReceived signal end\n");
 		train1.emergencyStop = 1;
         stopTrain();
         exit(0);
@@ -103,32 +123,6 @@ int  WriteTrameStatusRUNRP1(unsigned char status, unsigned char varDebug1, unsig
 }
 
 //////////////////////////////////////////
-/// Traitement d'une trame CAN
-///////////////////////////////////////////
-void TraitementDonnee (uCAN1_MSG *recCanMsg, TrainInfo *infos)
-{
-	
-		
-    if (recCanMsg->frame.id==MC_ID_SCHEDULEUR_MESURES)
-    {
-		// Envoi la vitesse instantannée (consigne vitesse) ,	le nombre d''impulsions, la vitesse mesurée, l'erreur du PID
-
-		if(MESCAN_GetData8(recCanMsg, cdmc_ordonnancementId)==MC_ID_RP1_STATUS_RUN)
-			WriteTrameStatusRUNRP1(status, varDebug1, varDebug2);
-			
-        infos-> speedMeasured= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);/** le nbre d'implusion envoyé ici
-		// est le nombre d'impulsion entre 2 mesures **/
-		infos-> nbImpulsions+= infos-> speedMeasured;
-        infos-> position= PAS_ROUE_CODEUSE * (infos->nbImpulsions);
-		infos-> speedInput= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
-		printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> speedMeasured);
-	}
-	else 
-		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
-}
-
-
-//////////////////////////////////////////
 /// Lecture des trames CAN
 ///////////////////////////////////////////
 void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
@@ -147,7 +141,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		infos-> nbImpulsions+= infos-> speedMeasured;
         infos-> position+= PAS_ROUE_CODEUSE * (infos->nbImpulsions);
 		infos-> speedInput= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
-		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s\n", infos-> position, infos-> speedMeasured);
+		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s,\n Consigne: %1f\n", infos-> position, infos-> speedMeasured, infos->speedInput);
 		//printf("Position: %lf\n", infos-> position);
 	} else if (recCanMsg->frame.id==MC_ID_EBTL2_RECEIVED) {
 		//printf("Balise numéro %X\n", recCanMsg->frame.data5);
@@ -188,7 +182,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 			infos-> nbImpulsions = 0;
 		}
 	} else {
-		printf("La trame lue a pour ID %X \n",recCanMsg->frame.id);
+		printf("Frame read with id: %X \n",recCanMsg->frame.id);
 		
 	}
 	
@@ -264,19 +258,37 @@ int main(int argc, char *argv[])
 		train1.speedMeasured = 0;
 		train1.positionDone = 0;
 		train1.emergencyStop = 0;
+		train1.connected = 0;
+		train1.sock = -1;
 
 		struct sockaddr_in addr_rbc;
 		pthread_t threadCAN;
 		
-		// Stop train when stopping program
-		if (signal(SIGINT, sig_handler) == SIG_ERR)
-        	printf("Cannot catch signal SIGINT\n");
+		struct itimerval timer; // Define timer for sending position to EVC
 
+		timer.it_interval.tv_sec=1;
+		timer.it_interval.tv_usec=20000; 
+		timer.it_value=timer.it_interval;
+
+ 		// Add clock 
+		if (signal(SIGALRM, periodSending) == SIG_ERR)
+ 			printf("\nCannot catch signal SIGALARM\n");
+
+		// Stop train when stopping program
+		if (signal(SIGINT, sigHandler) == SIG_ERR)
+        	printf("\nCannot catch signal SIGINT\n");
+
+		if (signal(SIGQUIT, sigHandler) == SIG_ERR)
+        	printf("\nCannot catch signal SIGQUIT\n");
+		
+		setitimer(ITIMER_REAL, &timer,NULL);
+		gettimeofday(&startPeriod,NULL); 
 
 		// thread to handle CAN messages
     	pthread_create(&threadCAN, NULL, getCANMsg, NULL);
 
         do {
+			train1.connected = 0;
 			printf("Connection...\n");
 			// Create socket
 			sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -285,7 +297,7 @@ int main(int argc, char *argv[])
 				continue;
 			}
 			printf("Socket OK \n");
-
+			train1.sock = sock;
 
 			bzero(&addr_rbc, sizeof(addr_rbc));
 
@@ -301,11 +313,12 @@ int main(int argc, char *argv[])
 			}
 
 			printf("Connection OK \n");
+			train1.connected = 1;
 
 			if (train1.positionDone == 0) {
-				sendData(sock, 1, TRAIN_ID, -1, 0);
+				sendData(sock, 1, TRAIN_ID, -1, train1.speedMeasured);
 			} else {
-				sendData(sock, 1, TRAIN_ID, train1.position, 0);
+				sendData(sock, 1, TRAIN_ID, (int)train1.position, train1.speedMeasured);
 			}
 			
 

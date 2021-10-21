@@ -21,6 +21,7 @@ void* connection_handler(void *socket_desc){
     int pos;
     int speed;
 
+
     do {
             int read = read_size = recv(sock , message , MAXLEN , 0);
             if (read < 0) {
@@ -40,6 +41,7 @@ void* connection_handler(void *socket_desc){
                             printf("Received initialization from train %i\n", id);
                             trains=storeData(id,pos,speed,trains);
                             sendData(sock, 2, id, pos, speed); //send ack 
+                            // TODO: see if there is a valid position
                             showTrains(trains);
                             break;
                         case 3 : // send command
@@ -62,7 +64,6 @@ void* connection_handler(void *socket_desc){
     } while(1);
     return NULL;
 }
-
 
 static Train * newTrain(int id, int pos, int speed) {
 	Train * train; 
