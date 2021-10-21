@@ -25,23 +25,32 @@ struct TrainInfo train1;
 
 unsigned char status, varDebug1, varDebug2;
 
+int periodDuration, sendingDuration;
+struct timeval startPeriod, endPeriod; 
+struct timeval startSendingPeriod, endSendingPeriod; 
 
-int duree;
-struct timeval startPeriod, endPeriod ; 
 //////////////////////////////////////////
 /// Signal handler
 /// SIGALARM
 ///////////////////////////////////////////
 void periodSending(int signo) {
+	int status = 0;
     gettimeofday(&endPeriod,NULL); 
-    duree= (endPeriod.tv_sec*100000+endPeriod.tv_usec)-(startPeriod.tv_sec*100000+startPeriod.tv_usec);
-    printf("Cycle duration %d us",duree);
-	if (train1.connected) {
-		if (train1.positionDone) {
-			sendData(train1.sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+	gettimeofday(&endSendingPeriod,NULL); 
+    periodDuration= (endPeriod.tv_sec*100000+endPeriod.tv_usec)-(startPeriod.tv_sec*100000+startPeriod.tv_usec);
+    //printf("Cycle duration %d us\n",periodDuration);
+
+	sendingDuration = (endSendingPeriod.tv_sec*100000+endSendingPeriod.tv_usec)-(startSendingPeriod.tv_sec*100000+startSendingPeriod.tv_usec);
+	if (sendingDuration > 100000) { // send a messsage at least each second
+		if (train1.connected && train1.positionDone) {
+			status = sendData(train1.sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+			if (status) {
+				startSendingPeriod=endSendingPeriod;
+			}
 		}
 	}
-    startPeriod=endPeriod;
+
+	startPeriod=endPeriod;
 } 
 
 
@@ -266,7 +275,7 @@ int main(int argc, char *argv[])
 		
 		struct itimerval timer; // Define timer for sending position to EVC
 
-		timer.it_interval.tv_sec=1;
+		timer.it_interval.tv_sec=0;
 		timer.it_interval.tv_usec=20000; 
 		timer.it_value=timer.it_interval;
 
@@ -283,11 +292,14 @@ int main(int argc, char *argv[])
 		
 		setitimer(ITIMER_REAL, &timer,NULL);
 		gettimeofday(&startPeriod,NULL); 
+		gettimeofday(&startSendingPeriod,NULL); 
 
 		// thread to handle CAN messages
     	pthread_create(&threadCAN, NULL, getCANMsg, NULL);
 
         do {
+			stopTrain();
+
 			train1.connected = 0;
 			printf("Connection...\n");
 			// Create socket
