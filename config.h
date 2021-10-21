@@ -11,6 +11,8 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
+#include <sys/time.h>
 
 #ifndef DEBUG
 #define CHECK_IF(stat, val, msg)    \
@@ -178,5 +180,13 @@ void parseMessage(char data[], int* code, int* id, int* position, int* speed) {
 	ptr = strtok(NULL, MESSAGE_END);
 	*speed = atoi(ptr);
 }
+
+
+float timeDiff(struct timeval *start, struct timeval *end) {
+    return (end->tv_sec - start->tv_sec)*1e6 + (end->tv_usec - start->tv_usec);
+}
+// usage : time_diff(&lastUpdate, &currentTime)
+// struct timeval currentTime;
+// gettimeofday(&currentTime, NULL);
 
 #endif
