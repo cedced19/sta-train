@@ -23,14 +23,22 @@ typedef struct TrainInfo
 	float vit_consigne;
 	int vit_mesuree;
 	int nb_impulsions;
+	int id;
 }TrainInfo;
 
 int main(int argc, char *argv[])
 {
-	if (N_ARG(2)) {
+	if (argc >= 3) {
+
 		char *serverIp = argv[1];
         int serverPort = atoi(argv[2]);
         int sock;
+		int trainid;
+		if (argc == 4) {
+			trainid = atoi(argv[3]);
+		} else {
+			trainid = TRAIN_ID;
+		}
 
         struct sockaddr_in addr_rbc;
 		printf("Connection en cours \n");
@@ -50,7 +58,7 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
-		sendData(sock, 5, TRAIN_ID, -1, -1);
+		sendData(sock, 1, trainid, -1, -1);
 
 		printf("Train auth OK \n");
 		
