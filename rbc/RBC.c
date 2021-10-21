@@ -9,7 +9,7 @@
 
 #define MAXLEN 500
 
-Train *trains=NULL;
+Train *trainsList=NULL;
 
 void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
@@ -44,20 +44,24 @@ void* connection_handler(void *socket_desc){
                         case 1: // receive position/speed
                             // store data
                             printf("Received initialization from train %i\n", id);
-                            trains=storeData(id,pos,speed,trains);
+                            if (selectTrain(id, trainsList) == NULL) {
+                                trainsList = addTrain(id,pos,speed, trainsList);    
+                            } else {
+                                storeData(id,pos,speed,trainsList);
+                            }
                             sendData(sock, 2, id, pos, speed); //send ack 
-                            showTrains(trains);
+                            //showTrains(trainsList);
                             break;
                         case 3 : // send command
                             printf("Received position from train %i\n", id);
-                            trains=storeData(id,pos,speed,trains);
-                            showTrains(trains);
+                            storeData(id,pos,speed,trainsList);
+                            //showTrains(trains);
                             sendData(sock, 6, id, pos, 45); //send ack 
                             break;
                         default:
                             break;
                     }
-                    //showTrains(trains);
+                    showTrains(trainsList);
                     
                     list = removeFirstNode(list);
                     //showList(list);
@@ -99,11 +103,9 @@ void showTrains(Train *trains) {
 }
 
 Train * selectTrain (int id_train, Train *trains) {
-    Train *trainscp = trains;
     while(trains!=NULL && id_train!=trains->id){
         trains=trains->nextTrain;
     }
-    if(trains==NULL) trains=addTrain(id_train,-1,-1,trainscp);
     return trains;
 } 
 
@@ -111,19 +113,18 @@ void * storeData(int id_train, int pos, int speed, Train * trains){
     trains=selectTrain(id_train, trains);
     trains->pos=pos;
     trains->speed=speed;
-    showTrains(trains);
     return NULL;
 }
 
 int calcDistance(int id_train){
-    Train *train1 = selectTrain(id_train, trains);
+    Train *train1 = selectTrain(id_train, trainsList);
     // chercher le train suivant (position sup, à un tour pres)
     int distmin;
-    while(trains!=NULL){
-        if(trains->id!=id_train){
-            if(abs(train1->pos - trains->pos)<distmin) distmin=abs(train1->pos - trains->pos);
-            if(abs(train1->pos - trains->pos + DISTTOUR)<distmin) distmin=abs(train1->pos - trains->pos + DISTTOUR);
-            if(abs(train1->pos - trains->pos - DISTTOUR)<distmin) distmin=abs(train1->pos - trains->pos - DISTTOUR);
+    while(trainsList!=NULL){
+        if(trainsList->id!=id_train){
+            if(abs(train1->pos - trainsList->pos)<distmin) distmin=abs(train1->pos - trainsList->pos);
+            if(abs(train1->pos - trainsList->pos + DISTTOUR)<distmin) distmin=abs(train1->pos - trainsList->pos + DISTTOUR);
+            if(abs(train1->pos - trainsList->pos - DISTTOUR)<distmin) distmin=abs(train1->pos - trainsList->pos - DISTTOUR);
         }
     }
     return distmin;
@@ -158,7 +159,7 @@ int main()
     puts("Listening");
     int c = sizeof(struct sockaddr_in);
     int new_socket;
-    trains=addTrain(0,-1,-1,NULL);
+    trainsList=addTrain(0,-1,-1,NULL);
 
     while ((new_socket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)))
     {
