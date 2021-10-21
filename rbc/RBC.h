@@ -6,6 +6,7 @@ typedef struct train {
 	int id;
 	int pos;
 	int speed;
+	
 	struct train *nextTrain;
 } Train;
 
