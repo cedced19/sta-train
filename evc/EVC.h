@@ -10,6 +10,7 @@ typedef struct TrainInfo
     int emergencyStop;
 	int sock;
 	int connected;
+	int id;
 }TrainInfo;
 
 void sig_handler(int signo);

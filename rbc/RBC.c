@@ -46,7 +46,6 @@ void* connection_handler(void *socket_desc){
                             printf("Received initialization from train %i\n", id);
                             trains=storeData(id,pos,speed,trains);
                             sendData(sock, 2, id, pos, speed); //send ack 
-                            // TODO: see if there is a valid position
                             showTrains(trains);
                             break;
                         case 3 : // send command
@@ -172,7 +171,7 @@ int main()
             perror("Could not create thread");
             return 1;
         }
-
+        pthread_detach(thread);
         puts("New connection assigned to handler");
     }
 

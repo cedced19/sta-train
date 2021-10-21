@@ -17,8 +17,6 @@
 
 #define position_PARCOURS 700 // Avance max d'un train pour le test
 
-#define N_ARG(x) (argc >= x) 
-
 struct TrainInfo train1;
 
 unsigned char status, varDebug1, varDebug2;
@@ -41,7 +39,7 @@ void periodSending(int signo) {
 	sendingDuration = (endSendingPeriod.tv_sec*100000+endSendingPeriod.tv_usec)-(startSendingPeriod.tv_sec*100000+startSendingPeriod.tv_usec);
 	if (sendingDuration > 100000) { // send a messsage at least each second
 		if (train1.connected && train1.positionDone) {
-			status = sendData(train1.sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+			status = sendData(train1.sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
 			if (status) {
 				startSendingPeriod=endSendingPeriod;
 			}
@@ -245,7 +243,7 @@ void* getCANMsg(void* arg) {
 ////////////////////////////////////////
 int main(int argc, char *argv[])
 {
-	if (N_ARG(2)) {
+	if (argc >= 3) {
 		char data[MAX_MSG_SIZE];
 		int readStatus;
 
@@ -262,6 +260,7 @@ int main(int argc, char *argv[])
 		int position;
 		int speed;
 		
+		
 		train1.position = 0;
 		train1.speedInput = 0;
 		train1.nbImpulsions = 0;
@@ -270,6 +269,14 @@ int main(int argc, char *argv[])
 		train1.emergencyStop = 0;
 		train1.connected = 0;
 		train1.sock = -1;
+		train1.id = -1;
+
+		if (argc == 4) {
+			train1.id = atoi(argv[3]);
+		} else {
+			train1.id = TRAIN_ID;
+		}
+			
 
 		struct sockaddr_in addr_rbc;
 		pthread_t threadCAN;
@@ -329,9 +336,9 @@ int main(int argc, char *argv[])
 			train1.connected = 1;
 
 			if (train1.positionDone == 0) {
-				sendData(sock, 1, TRAIN_ID, -1, train1.speedMeasured);
+				sendData(sock, 1, train1.id, -1, train1.speedMeasured);
 			} else {
-				sendData(sock, 1, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+				sendData(sock, 1, train1.id, (int)train1.position, train1.speedMeasured);
 			}
 			
 
@@ -363,7 +370,7 @@ int main(int argc, char *argv[])
 						printf("Speed %d\n",speed);
 						*/
 
-						if (id != TRAIN_ID) {
+						if (id != train1.id) {
 							list = removeFirstNode(list);
 							continue;
 						}
@@ -379,7 +386,7 @@ int main(int argc, char *argv[])
 									}
 									printf("One balise located\n");
 									WriteVitesseConsigne(0,1);
-									sendData(sock, 3, TRAIN_ID, (int)train1.position, train1.speedMeasured);
+									sendData(sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
 								} else {
 									printf("Nothing to do\n");
 									WriteVitesseConsigne(0,1);
