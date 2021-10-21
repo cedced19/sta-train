@@ -17,9 +17,7 @@
 
 #define position_PARCOURS 700 // Avance max d'un train pour le test
 
-#define CHECK_ERROR_DIFFERENT(msg,val1,val2) if (val1 != val2) { perror(msg); exit(-1); }
-#define CHECK_ERROR_EQUAL(msg,val1,val2) if (val1 == val2) { perror(msg); exit(-1); }
-#define N_ARG(x) (argc == x) || ((argc == x + 1) && (argv[argc] == NULL))
+#define N_ARG(x) (argc >= x) 
 
 struct TrainInfo train1;
 
@@ -71,7 +69,7 @@ void sigHandler(int signo)
 /// Stop train
 ///////////////////////////////////////////
 void stopTrain(void) {
-    printf("Stop train");
+    printf("Stop train\n");
     WriteVitesseConsigne(0, 1);
 }
 
@@ -135,9 +133,9 @@ int  WriteTrameStatusRUNRP1(unsigned char status, unsigned char varDebug1, unsig
 /// Lecture des trames CAN
 ///////////////////////////////////////////
 void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
-{	
+{	 
 	int baliseCode;
-	int positionFromBalise = -1;
+	static int positionFromBalise = -1;
 	if (recCanMsg->frame.id==MC_ID_SCHEDULEUR_MESURES) {
 		// Envoi la vitesse instantannée (consigne vitesse) ,	le nombre d''impulsions, la vitesse mesurée, l'erreur du PID
 
@@ -148,7 +146,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		infos-> speedMeasured= (int)MESCAN_GetData8(recCanMsg, cdmc_vitesseMesuree);
 
 		infos-> nbImpulsions+= infos-> speedMeasured;
-        infos-> position+= PAS_ROUE_CODEUSE * (infos->nbImpulsions);
+        infos-> position = (float)positionFromBalise + PAS_ROUE_CODEUSE * (infos->nbImpulsions);
 		infos-> speedInput= (float)MESCAN_GetData8(recCanMsg, cdmc_vitesseConsigneInterne);
 		//printf("Actualisation: Postition courante : %lf cm, Vit: %d cm/s,\n Consigne: %1f\n", infos-> position, infos-> speedMeasured, infos->speedInput);
 		//printf("Position: %lf\n", infos-> position);
@@ -187,7 +185,7 @@ void readCANMsg(uCAN1_MSG *recCanMsg, TrainInfo *infos)
 		}
 		//printf("Postion donné par balise %i\n", positionFromBalise);
 		if (positionFromBalise != -1) {
-			infos->position = positionFromBalise;
+			infos->position = (float)positionFromBalise;
 			infos-> nbImpulsions = 0;
 		}
 	} else {
@@ -250,9 +248,12 @@ int main(int argc, char *argv[])
 	if (N_ARG(2)) {
 		char data[MAX_MSG_SIZE];
 		int readStatus;
+
 		char *serverIp = argv[1];
         int serverPort = atoi(argv[2]);
+
         int sock;
+
 		T_list list = NULL;
 
 		// Message parsed
