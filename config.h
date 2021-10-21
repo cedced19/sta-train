@@ -69,10 +69,12 @@ T_node * addNode (T_elt e, T_node * node) {
 
 
 void showList(T_list l) {
+	printf("Start reading\n");
 	while(l != NULL) {
 		printf("%s \n", toString(l->data));
 		l = l->pNext; 
 	}
+	printf("End list reading\n");
 }
 
 void freeList(T_list l) {
@@ -149,36 +151,40 @@ int sendData(int socket, int code, int id, int position, int speed) {
 
 // parse the receive message to extract a single message for later exploitation
 T_list getOneMessage(T_list list, char data[]) {
-    char* token;
+	if (strlen(data) > 1) {		
+		char* token;
+		// get first message 
+		token = strtok(data, MESSAGE_END); // cut in two parts
+		list = addNode(token, list);
 
-    // get first message 
-    token = strtok(data, MESSAGE_END); // cut in two parts
-	
-    list = addNode(token, list);
-
-    // get all remaining messages from token
-    while( token != NULL ) {
-        token = strtok(NULL, MESSAGE_END);
-		if (token != NULL) {
-			list = addNode(token, list);
+		// get all remaining messages from token
+		while( token != NULL ) {
+			token = strtok(NULL, MESSAGE_END);
+			if (token != NULL) {
+				list = addNode(token, list);
+			}
+			
 		}
-        
-    }
+	}
 	return list;
 }
 
-void parseMessage(char data[], int* code, int* id, int* position, int* speed) {
-	char *ptr;
-	char delim[] = SEPARATOR;
-
-	ptr = strtok(data, delim);
-	*code = atoi(ptr);
-	ptr = strtok(NULL, delim);
-	*id = atoi(ptr);
-	ptr = strtok(NULL, delim);
-	*position = atoi(ptr);
-	ptr = strtok(NULL, MESSAGE_END);
-	*speed = atoi(ptr);
+int parseMessage(char data[], int* code, int* id, int* position, int* speed) {
+	if (strlen(data) > 5) {
+		char *ptr;
+		char delim[] = SEPARATOR;
+		ptr = strtok(data, delim);
+		*code = atoi(ptr);
+		ptr = strtok(NULL, delim);
+		*id = atoi(ptr);
+		ptr = strtok(NULL, delim);
+		*position = atoi(ptr);
+		ptr = strtok(NULL, MESSAGE_END);
+		*speed = atoi(ptr);	
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 

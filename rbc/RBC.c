@@ -31,9 +31,14 @@ void* connection_handler(void *socket_desc){
                 perror("Ending connection\n");
                 break;
             } else {
-                do {
-                    list = getOneMessage(list,message);
-                    parseMessage(message, &code, &id, &pos, &speed);
+                list = getOneMessage(list,message);
+                while(list!=NULL) {
+                    if(parseMessage(list->data, &code, &id, &pos, &speed) == 0) {
+                        if (list!=NULL) {
+                            list = removeFirstNode(list);
+                        }
+                        break;
+                    }
                     printf("Responding new message from %i with code %i\n", id, code);
                     switch(code){
                         case 1: // receive position/speed
@@ -48,7 +53,7 @@ void* connection_handler(void *socket_desc){
                             printf("Received position from train %i\n", id);
                             trains=storeData(id,pos,speed,trains);
                             showTrains(trains);
-                            sendData(sock, 6, id, pos, 40); //send ack 
+                            sendData(sock, 6, id, pos, 45); //send ack 
                             break;
                         default:
                             break;
@@ -59,7 +64,7 @@ void* connection_handler(void *socket_desc){
                     //showList(list);
                     printf("Message done!\n");
                 
-                } while(list!=NULL);
+                };
             }
     } while(1);
     return NULL;
