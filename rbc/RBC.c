@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <math.h>
 #include "RBC.h"
 
 #define MAXLEN 500
@@ -44,26 +45,24 @@ void* connection_handler(void *socket_desc){
                         case 1: // receive position/speed
                             // store data
                             printf("Received initialization from train %i\n", id);
-                            if (selectTrain(id, trainsList) == NULL) {
-                                trainsList = addTrain(id,pos,speed, trainsList);    
+                            if (!selectTrain(id, trainsList)) {
+                                trainsList = addTrain(id,pos,speed, trainsList);  
+                                orderTrain(trainsList);
                             } else {
                                 storeData(id,pos,speed,trainsList);
                             }
                             sendData(sock, 2, id, pos, speed); //send ack 
-                            //showTrains(trainsList);
                             break;
                         case 3 : // send command
-                            printf("Received position from train %i\n", id);
-                            storeData(id,pos,speed,trainsList);
-                            //showTrains(trains);
-                            sendData(sock, 6, id, pos, 45); //send ack 
+                            printf("speed request ack from train %i\n", id);
                             break;
                         default:
                             break;
                     }
                     showTrains(trainsList);
-                    
                     list = removeFirstNode(list);
+                    sendData(sock, 4, id, -1, calcSpeed(selectTrain(id, trainsList)));
+
                     //showList(list);
                     printf("Message done!\n");
                 
@@ -79,8 +78,8 @@ static Train * newTrain(int id, int pos, int speed) {
 	train->id = id; 
 	train->pos = pos; 
 	train->speed = speed; 
+    train->order = 0;
 	train->nextTrain = NULL;
-
 	return train;
 }
 
@@ -116,18 +115,100 @@ void * storeData(int id_train, int pos, int speed, Train * trains){
     return NULL;
 }
 
-int calcDistance(int id_train){
-    Train *train1 = selectTrain(id_train, trainsList);
-    // chercher le train suivant (position sup, à un tour pres)
-    int distmin;
-    while(trainsList!=NULL){
-        if(trainsList->id!=id_train){
-            if(abs(train1->pos - trainsList->pos)<distmin) distmin=abs(train1->pos - trainsList->pos);
-            if(abs(train1->pos - trainsList->pos + DISTTOUR)<distmin) distmin=abs(train1->pos - trainsList->pos + DISTTOUR);
-            if(abs(train1->pos - trainsList->pos - DISTTOUR)<distmin) distmin=abs(train1->pos - trainsList->pos - DISTTOUR);
+void * orderTrain(Train * listTrains){
+    // ici on cherche le plus grand écart entre les trains et on définit order=1 pour le train qui est à la tete
+    int distmax=0;
+    Train * trains=listTrains;
+    Train * firstTrain=NULL;
+    int numberOfTrains=0;
+    while(trains!=NULL){
+        trains->order=0; //réinitialise le premier train
+        Train *nextTrains=trains->nextTrain;
+        while(nextTrains!=NULL){ //on mets a jour la distance max et on attribue momentanément le premier train
+            int dist = trains->pos-nextTrains->pos>distmax;
+            if(dist>distmax && dist<roundf(DISTTOUR/2)) {distmax=dist; firstTrain=trains;}; 
+            if(dist>distmax && dist>roundf(DISTTOUR/2)) {distmax=dist; firstTrain=nextTrains;};
+            if(-dist>distmax && -dist<roundf(DISTTOUR/2)) {distmax=-dist; firstTrain=nextTrains;};
+            if(-dist>distmax && -dist>roundf(DISTTOUR/2)) {distmax=-dist; firstTrain=trains;};
+            nextTrains=nextTrains->nextTrain;
         }
+        numberOfTrains += 1;
+        trains = trains->nextTrain;
     }
-    return distmin;
+    firstTrain->order=0;
+    for(int i=1;i<numberOfTrains;i++){
+        Train *nextTrain;
+        nextTrain=selectTrain(calcMinDistance(i, trains), listTrains);
+        nextTrain->order=i;
+    }
+    return NULL;
+}
+
+int calcMinDistance(int id_train, Train * trainsList){ //fonction utilisée uniquement par orderTrain pour classer les trains en fonction de la plus petite distance qui les sépare 
+    Train *nextTrain = selectTrain(id_train, trainsList);
+    // chercher le train suivant (position sup, à un tour pres)
+    int distmin, id;
+    while(trainsList!=NULL){
+        if(trainsList->id!=id_train && trainsList->pos!=-1 && !(trainsList->order)){ // on parcours les trains qui ne sont pas encore ordonnés et qui ne soient pas le pc au sol (pos=-1)
+            int dist=nextTrain->pos - trainsList->pos;
+            if(dist>0 && dist<distmin){distmin=dist; id=nextTrain->id;};
+            if(dist<0 && DISTTOUR+dist<distmin) {distmin=DISTTOUR+dist; id=nextTrain->id;};
+        }
+        trainsList=trainsList->nextTrain;
+    }
+    return id;
+}
+
+int calcDistance(Train *train1, Train *train2){ //attention pour utiliser cette fonction il faut que train1->order > train2->order
+    int dist=train1->pos-train2->pos;
+    if(dist<0) dist+=DISTTOUR;
+    return dist;
+}
+
+float calcSpeed(Train *train){
+
+    if (train->order == 0)
+    {
+        return 30.0;
+    }
+    else {   //ici il faut distinguer le cas ou le train est trop proche du suivant ou s'il peut aller a vmax
+    //     int d = 0;
+    //     if(trains.nb_trains >= 2){
+    //         d  = distance(t1, t2);
+    //     }
+    //     else{
+    //         d = 1745;
+    //     }
+
+    //     int e = DIST_OPT - d;
+
+    //     if (d < DIST_STOP)
+    //     {
+    //         printf("Emergency stop !");
+    //         return 0;
+    //     }
+    //     else if (d < DIST_SLOW_DOWN)
+    //     {
+    //         printf("Slow mode");
+    //         return 0.9 * (t1 -> speed);
+    //     }
+    //     else
+    //     {
+    //         printf("Regulation mode");
+    //         float K = fabs(P / e * (t1 -> speed));
+    //         if (K > 25)
+    //         {
+    //             return 25;
+    //         }
+    //         else
+    //         {
+    //             return K;
+    //         }
+    //     }
+    // }
+    //     return ;
+    }
+    return 0.0;
 }
 
 int main()
