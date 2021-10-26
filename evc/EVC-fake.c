@@ -8,7 +8,7 @@
 
 #include  "../config.h"
 
-#define TRAIN_ID 1
+#define TRAIN_ID 5
 
 #define DISTANCE_PARCOURS 700 // Avance max d'un train pour le test
 
