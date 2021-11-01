@@ -61,11 +61,11 @@ void* connection_handler(void *socket_desc){
                     }
                     showTrains(trainsList);
                     list = removeFirstNode(list);
-                    sendData(sock, 4, id, -1, calcSpeed(selectTrain(id, trainsList)));
+                    printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
+                    sendData(sock, 4, id, -1, calcSpeed(selectTrain(id, trainsList), trainsList));
 
                     //showList(list);
                     printf("Message done!\n");
-                
                 };
             }
     } while(1);
@@ -84,7 +84,7 @@ static Train * newTrain(int id, int pos, int speed) {
 }
 
 
-Train * addTrain (int id, int pos, int speed, Train *trains) {
+Train * addTrain (int id, int pos, int speed, Train *trains) { 
 	Train * train; 
 	train = newTrain(id, pos, speed); 
 	train->nextTrain = trains; 
@@ -96,13 +96,21 @@ void showTrains(Train *trains) {
 		printf(" => Train numéro : %d \n",trains->id);
         printf("  --------------------\n");
 		printf("\tpos : %d \n",trains->pos);
-		printf("\tspeed : %d \n\n",trains->speed);
+		printf("\tspeed : %d \n",trains->speed);
+		printf("\torder : %d \n\n",trains->order);
 		trains= trains->nextTrain; 
 	}
 }
 
 Train * selectTrain (int id_train, Train *trains) {
     while(trains!=NULL && id_train!=trains->id){
+        trains=trains->nextTrain;
+    }
+    return trains;
+} 
+
+Train * selectTrainByOrder (int orderTrain, Train *trains) {
+    while(trains!=NULL && orderTrain!=trains->order){
         trains=trains->nextTrain;
     }
     return trains;
@@ -119,13 +127,13 @@ void * orderTrain(Train * listTrains){
     // ici on cherche le plus grand écart entre les trains et on définit order=1 pour le train qui est à la tete
     int distmax=0;
     Train * trains=listTrains;
-    Train * firstTrain=NULL;
+    Train * firstTrain=listTrains;
     int numberOfTrains=0;
-    while(trains!=NULL){
-        trains->order=0; //réinitialise le premier train
+    while(trains->id!=0){
+        trains->order=0; //réinitialise les ordres 
         Train *nextTrains=trains->nextTrain;
-        while(nextTrains!=NULL){ //on mets a jour la distance max et on attribue momentanément le premier train
-            int dist = trains->pos-nextTrains->pos>distmax;
+        while(nextTrains->id!=0){ //on mets a jour la distance max et on attribue momentanément le premier train
+            int dist = trains->pos-nextTrains->pos;
             if(dist>distmax && dist<roundf(DISTTOUR/2)) {distmax=dist; firstTrain=trains;}; 
             if(dist>distmax && dist>roundf(DISTTOUR/2)) {distmax=dist; firstTrain=nextTrains;};
             if(-dist>distmax && -dist<roundf(DISTTOUR/2)) {distmax=-dist; firstTrain=nextTrains;};
@@ -135,11 +143,15 @@ void * orderTrain(Train * listTrains){
         numberOfTrains += 1;
         trains = trains->nextTrain;
     }
-    firstTrain->order=0;
-    for(int i=1;i<numberOfTrains;i++){
-        Train *nextTrain;
-        nextTrain=selectTrain(calcMinDistance(i, trains), listTrains);
-        nextTrain->order=i;
+
+    firstTrain->order=1;
+
+    if(numberOfTrains>1){
+        Train *nextTrain=firstTrain;
+        for(int i=2;i<=numberOfTrains;i++){
+            nextTrain=selectTrain(calcMinDistance(nextTrain->id, listTrains), listTrains);
+            nextTrain->order=i;
+        }
     }
     return NULL;
 }
@@ -151,8 +163,9 @@ int calcMinDistance(int id_train, Train * trainsList){ //fonction utilisée uniq
     while(trainsList!=NULL){
         if(trainsList->id!=id_train && trainsList->pos!=-1 && !(trainsList->order)){ // on parcours les trains qui ne sont pas encore ordonnés et qui ne soient pas le pc au sol (pos=-1)
             int dist=nextTrain->pos - trainsList->pos;
-            if(dist>0 && dist<distmin){distmin=dist; id=nextTrain->id;};
-            if(dist<0 && DISTTOUR+dist<distmin) {distmin=DISTTOUR+dist; id=nextTrain->id;};
+            if(dist>0 && dist<distmin){distmin=dist; id=trainsList->id;};
+            if(dist<0 && -dist<distmin) {distmin=-dist; id=trainsList->id;};
+            if(dist<0 && DISTTOUR+dist<distmin) {distmin=DISTTOUR+dist; id=trainsList->id;};
         }
         trainsList=trainsList->nextTrain;
     }
@@ -165,48 +178,44 @@ int calcDistance(Train *train1, Train *train2){ //attention pour utiliser cette 
     return dist;
 }
 
-float calcSpeed(Train *train){
+float calcSpeed(Train *train, Train * trainsList){
 
-    if (train->order == 0)
+    if (train->id == 0) return -1;
+    else if (train->order == 1)
     {
-        return 30.0;
+        return MAX_SPEED;
     }
     else {   //ici il faut distinguer le cas ou le train est trop proche du suivant ou s'il peut aller a vmax
-    //     int d = 0;
-    //     if(trains.nb_trains >= 2){
-    //         d  = distance(t1, t2);
-    //     }
-    //     else{
-    //         d = 1745;
-    //     }
+        if(trainsList->nextTrain->id == 0) return MAX_SPEED; // cas ou le train est seul
 
-    //     int e = DIST_OPT - d;
+        Train *precedTrain=selectTrainByOrder(train->order - 1, trainsList);
+        int dist = calcDistance(precedTrain, train);
 
-    //     if (d < DIST_STOP)
-    //     {
-    //         printf("Emergency stop !");
-    //         return 0;
-    //     }
-    //     else if (d < DIST_SLOW_DOWN)
-    //     {
-    //         printf("Slow mode");
-    //         return 0.9 * (t1 -> speed);
-    //     }
-    //     else
-    //     {
-    //         printf("Regulation mode");
-    //         float K = fabs(P / e * (t1 -> speed));
-    //         if (K > 25)
-    //         {
-    //             return 25;
-    //         }
-    //         else
-    //         {
-    //             return K;
-    //         }
-    //     }
-    // }
-    //     return ;
+        //calc de la distance reglementaire en fonction de la vitesse du train de devant 
+        int dist_ok=precedTrain->speed * 2; //distance parcourue en deux sec
+
+        int e = dist_ok - dist;
+
+        if (dist < EMERGENCY_DIST){
+            printf("STOOOOP\n");
+            return 0.0;
+        }
+        else if (dist < dist_ok){
+            printf("ral \n");
+            return 0.9 * (train->speed);
+        }
+        else{
+            printf("placement\n");
+            float K = fabs(GAIN / e * (train->speed));
+            if (K > MAX_SPEED)
+            {
+                return MAX_SPEED;
+            }
+            else
+            {
+                return K;
+            }
+        }
     }
     return 0.0;
 }
@@ -220,7 +229,8 @@ int main()
 
     /* Create socket */
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
+    if (sock < 0)
+    {
         perror("Opening stream socket");
         exit(1);
     }
@@ -230,7 +240,8 @@ int main()
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons(PORT_NUMBER);
 
-    if (bind(sock, (struct sockaddr *)&server, sizeof(server))) {
+    if (bind(sock, (struct sockaddr *)&server, sizeof(server)))
+    {
         perror("Binding stream socket");
         exit(1);
     }
@@ -256,5 +267,4 @@ int main()
         pthread_detach(thread);
         puts("New connection assigned to handler");
     }
-
 }
