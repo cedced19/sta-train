@@ -8,7 +8,7 @@
 
 #include  "../config.h"
 
-#define TRAIN_ID 5
+#define TRAIN_ID 2
 
 #define DISTANCE_PARCOURS 700 // Avance max d'un train pour le test
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 		
 		printf("Connection OK \n");
 
-		sendData(sock, 1, trainid, -1, -1);
+		sendData(sock, 1, trainid, 100, -1);
 
 		printf("Train auth OK \n");
 		
