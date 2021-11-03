@@ -6,7 +6,6 @@
 #define MAX_MSG_SIZE 1024
 
 #define PORT_NUMBER 4242
-
 #define MAX_REQUEST 5
 #define DISTTOUR 17444
 
