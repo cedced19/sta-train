@@ -10,6 +10,10 @@ test-client-fake:
 	@echo "Lancement du client"
 	cd evc/ && make test-fake
 
+test-client-fake-2: 
+	@echo "Lancement du client"
+	cd evc/ && make test-fake-2
+
 clean: 
 	@echo "Cleaning..."
 	cd rbc/ && make clean && cd ../evc/ && make clean

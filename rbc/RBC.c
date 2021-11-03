@@ -7,10 +7,24 @@
 #include <pthread.h>
 #include <math.h>
 #include "RBC.h"
+#include <pthread.h>
 
 #define MAXLEN 500
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
 Train *trainsList=NULL;
+
+
+void * orderTrain2(Train * trains){
+    int i=1;
+
+    while(trains->id!=0){   
+        trains->order=i++;
+        trains=trains->nextTrain;
+    }
+}
+
 
 void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
@@ -33,7 +47,6 @@ void* connection_handler(void *socket_desc){
                 break;
             } else {
                 list = getOneMessage(list, message);
-                printf("first data : %s\n", list->data);
                 // showList(list);
                 while (list != NULL)
                 {
@@ -48,7 +61,11 @@ void* connection_handler(void *socket_desc){
                             if (!selectTrain(id, trainsList))
                             {
                                 trainsList = addTrain(id, pos, speed, trainsList);
+                                // pthread_mutex_lock(&mutex);
+                                printf("in mutex\n");
                                 orderTrain(trainsList);
+                                // pthread_mutex_unlock(&mutex);
+                                printf("after order train");
                             }
                             sendData(sock, 2, id, -1, -1);
                             break;
@@ -58,7 +75,9 @@ void* connection_handler(void *socket_desc){
                             if (!selectTrain(id, trainsList))
                             {
                                 trainsList = addTrain(id,pos,speed, trainsList);  
+                                // pthread_mutex_lock(&mutex);
                                 orderTrain(trainsList);
+                                // pthread_mutex_unlock(&mutex);
                             }
                             else
                             {
@@ -74,8 +93,8 @@ void* connection_handler(void *socket_desc){
                     }
                     showTrains(trainsList);
                     // list = removeFirstNode(list);
-                    printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
-                    sendData(sock, 6, id, -1, calcSpeed(selectTrain(id, trainsList), trainsList));
+                    // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
+                    sendData(sock, 6, id, -1, 40);
 
                     //showList(list);
                     printf("Message done!\n");
@@ -143,7 +162,7 @@ void * orderTrain(Train * listTrains){
     Train * firstTrain=listTrains;
     int numberOfTrains=0;
     while(trains->id!=0){
-        trains->order=0; //réinitialise les ordres 
+        trains->order=-1; //réinitialise les ordres 
         Train *nextTrains=trains->nextTrain;
         while(nextTrains->id!=0){ //on mets a jour la distance max et on attribue momentanément le premier train
             int dist = trains->pos-nextTrains->pos;
@@ -173,15 +192,18 @@ int calcMinDistance(int id_train, Train * trainsList){ //fonction utilisée uniq
     Train *nextTrain = selectTrain(id_train, trainsList);
     // chercher le train suivant (position sup, à un tour pres)
     int distmin, id;
-    while(trainsList!=NULL){
-        if(trainsList->id!=id_train && trainsList->pos!=-1 && !(trainsList->order)){ // on parcours les trains qui ne sont pas encore ordonnés et qui ne soient pas le pc au sol (pos=-1)
+    while(trainsList->id!=0){
+        if(trainsList->id!=id_train && trainsList->order!=0){ // on parcours les trains qui ne sont pas encore ordonnés et qui ne soient pas le pc au sol (pos=-1)
             int dist=nextTrain->pos - trainsList->pos;
             if(dist>0 && dist<distmin){distmin=dist; id=trainsList->id;};
             if(dist<0 && -dist<distmin) {distmin=-dist; id=trainsList->id;};
             if(dist<0 && DISTTOUR+dist<distmin) {distmin=DISTTOUR+dist; id=trainsList->id;};
+            if(dist==0){id=0;break;}
+        printf("calcmin %d, %d \n",trainsList->pos, dist);
         }
         trainsList=trainsList->nextTrain;
     }
+        printf("out%i\n ", id);
     return id;
 }
 
