@@ -10,4 +10,4 @@ RBC:
 	$(CC) RBC.c -o RBC.exe $(LFLAGS) $(FLAGS)
 
 test: RBC
-	./RBC.exe
+	./RBC.exe $(RBC_PORT)

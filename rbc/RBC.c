@@ -17,12 +17,11 @@ Train *trainsList=NULL;
 
 
 void * orderTrain2(Train * trains){
-    int i=1;
-
     while(trains->id!=0){   
-        trains->order=i++;
+        trains->order=trains->id;
         trains=trains->nextTrain;
     }
+    return NULL;
 }
 
 
@@ -255,10 +254,10 @@ float calcSpeed(Train *train, Train * trainsList){
     return 0.0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     pthread_t thread;
-
+    int port;
     int sock;
     struct sockaddr_in server, client;
 
@@ -270,10 +269,18 @@ int main()
         exit(1);
     }
 
+    /* Custom port */
+    if (argc == 2) {
+		port = atoi(argv[1]);
+	} else {
+		port = PORT_NUMBER;
+	}
+    printf("Port: %d\n", port);
+
     /* Name socket */
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(PORT_NUMBER);
+    server.sin_port = htons(port);
 
     if (bind(sock, (struct sockaddr *)&server, sizeof(server)))
     {
