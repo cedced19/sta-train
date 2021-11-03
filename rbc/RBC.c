@@ -32,37 +32,50 @@ void* connection_handler(void *socket_desc){
                 perror("Ending connection\n");
                 break;
             } else {
-                list = getOneMessage(list,message);
-                while(list!=NULL) {
-                    if(parseMessage(list->data, &code, &id, &pos, &speed) == 0) {
-                        if (list!=NULL) {
-                            list = removeFirstNode(list);
-                        }
-                        break;
-                    }
+                list = getOneMessage(list, message);
+                printf("first data : %s\n", list->data);
+                // showList(list);
+                while (list != NULL)
+                {
+                    list = parseMessage(list, &code, &id, &pos, &speed);
+                   
+
                     printf("Responding new message from %i with code %i\n", id, code);
                     switch(code){
-                        case 1: // receive position/speed
-                            // store data
+
+                        case 1: // ack connection
                             printf("Received initialization from train %i\n", id);
-                            if (!selectTrain(id, trainsList)) {
+                            if (!selectTrain(id, trainsList))
+                            {
+                                trainsList = addTrain(id, pos, speed, trainsList);
+                                orderTrain(trainsList);
+                            }
+                            sendData(sock, 2, id, -1, -1);
+                            break;
+                        case 3: // receive position/speed
+                            // store data
+                            printf("Received speed/position from train %i\n", id);
+                            if (!selectTrain(id, trainsList))
+                            {
                                 trainsList = addTrain(id,pos,speed, trainsList);  
                                 orderTrain(trainsList);
-                            } else {
+                            }
+                            else
+                            {
                                 storeData(id,pos,speed,trainsList);
                             }
-                            sendData(sock, 2, id, pos, speed); //send ack 
+                            sendData(sock, 4, id, pos, speed); //send ack 
                             break;
-                        case 3 : // send command
+                        case 5: // send command
                             printf("speed request ack from train %i\n", id);
                             break;
                         default:
                             break;
                     }
                     showTrains(trainsList);
-                    list = removeFirstNode(list);
+                    // list = removeFirstNode(list);
                     printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
-                    sendData(sock, 4, id, -1, calcSpeed(selectTrain(id, trainsList), trainsList));
+                    sendData(sock, 6, id, -1, calcSpeed(selectTrain(id, trainsList), trainsList));
 
                     //showList(list);
                     printf("Message done!\n");
