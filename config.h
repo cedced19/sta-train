@@ -148,6 +148,14 @@ int sendData(int socket, int code, int id, int position, int speed) {
     return 0;
 } 
 
+int checkMessage(char data[]) {
+	char *code,*id,*pos,*speed;
+	if (strlen(data)<7) {
+		return 0;
+	}
+
+	return 1;
+}
 
 // parse the receive message to extract a single message for later exploitation
 T_list getOneMessage(T_list list, char data[]) {
@@ -166,14 +174,16 @@ T_list getOneMessage(T_list list, char data[]) {
 			
 		}
 	}
+	while(checkMessage(list->data)) {
+		list = removeFirstNode(list);
+	}
 	return list;
 }
 
-int parseMessage(char data[], int* code, int* id, int* position, int* speed) {
-	if (strlen(data) > 5) {
+T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;
 		char delim[] = SEPARATOR;
-		ptr = strtok(data, delim);
+		ptr = strtok(list->data, delim);
 		*code = atoi(ptr);
 		ptr = strtok(NULL, delim);
 		*id = atoi(ptr);
@@ -181,10 +191,8 @@ int parseMessage(char data[], int* code, int* id, int* position, int* speed) {
 		*position = atoi(ptr);
 		ptr = strtok(NULL, MESSAGE_END);
 		*speed = atoi(ptr);	
-		return 1;
-	} else {
-		return 0;
-	}
+		list = removeFirstNode(list);
+		return list;
 }
 
 
