@@ -6,6 +6,7 @@
 #define MAX_MSG_SIZE 1024
 
 #define PORT_NUMBER 4242
+
 #define MAX_REQUEST 5
 #define DISTTOUR 17444
 
@@ -149,11 +150,10 @@ int sendData(int socket, int code, int id, int position, int speed) {
 } 
 
 int checkMessage(char data[]) {
-	char *code,*id,*pos,*speed;
 	if (strlen(data)<7) {
 		return 0;
 	}
-
+	if(data[strlen(data)-1]==':') return 0;
 	return 1;
 }
 
@@ -163,19 +163,23 @@ T_list getOneMessage(T_list list, char data[]) {
 		char* token;
 		// get first message 
 		token = strtok(data, MESSAGE_END); // cut in two parts
-		list = addNode(token, list);
+		if (checkMessage(token)) {
+			printf("\nList %s\n", token);
+			list = addNode(token, list);
+		}
+		
 
 		// get all remaining messages from token
 		while( token != NULL ) {
 			token = strtok(NULL, MESSAGE_END);
 			if (token != NULL) {
-				list = addNode(token, list);
+				if (checkMessage(token)) {
+					printf("\nList %s\n", token);
+					list = addNode(token, list);
+				}
 			}
 			
 		}
-	}
-	while(checkMessage(list->data)) {
-		list = removeFirstNode(list);
 	}
 	return list;
 }
