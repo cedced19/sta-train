@@ -305,9 +305,8 @@ int main(int argc, char *argv[])
 		// thread to handle CAN messages
     	pthread_create(&threadCAN, NULL, getCANMsg, NULL);
 
-        do {
+        while(1) {
 			stopTrain();
-
 			train1.connected = 0;
 			printf("Connection...\n");
 			// Create socket
@@ -374,7 +373,7 @@ int main(int argc, char *argv[])
 							list = removeFirstNode(list);
 							continue;
 						}
-
+						printf("Message received with code %d\n", code);
 						switch (code) {
 							case 2:
 								printf("Train auth OK \n");
@@ -393,21 +392,22 @@ int main(int argc, char *argv[])
 								}
 								break;
 							case 6:
+								printf("Speed reference %d\n", speed);
 								WriteVitesseConsigne(speed, 1);
+								sendData(sock, 5, train1.id, (int)train1.position, speed);
 								break;
 							case 99:
 								stopTrain();
 								break;
 						}
 
-						//sendData(sock, 2, id, -1, -1);
-						
-						// sendToGUI(list->data)
 						list = removeFirstNode(list);
 					}
 				}
 			}
-		} while(1);
+			close(sock);
+			sleep(3);
+		}
 		
 		// Join threads
 		pthread_join(threadCAN, NULL);
