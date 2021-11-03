@@ -5,7 +5,7 @@
 #define MESSAGE_END "$$"
 #define MAX_MSG_SIZE 1024
 
-#define PORT_NUMBER 4244
+#define PORT_NUMBER 4242
 #define MAX_REQUEST 5
 #define DISTTOUR 17444
 
@@ -148,6 +148,13 @@ int sendData(int socket, int code, int id, int position, int speed) {
     return 0;
 } 
 
+int checkMessage(char data[]) {
+	if (strlen(data)<7) {
+		return 0;
+	}
+	if(data[strlen(data)-1]==':') return 0;
+	return 1;
+}
 
 // parse the receive message to extract a single message for later exploitation
 T_list getOneMessage(T_list list, char data[]) {
@@ -155,13 +162,20 @@ T_list getOneMessage(T_list list, char data[]) {
 		char* token;
 		// get first message 
 		token = strtok(data, MESSAGE_END); // cut in two parts
-		list = addNode(token, list);
+		if (checkMessage(token)) {
+			printf("\nList %s\n", token);
+			list = addNode(token, list);
+		}
+		
 
 		// get all remaining messages from token
 		while( token != NULL ) {
 			token = strtok(NULL, MESSAGE_END);
 			if (token != NULL) {
-				list = addNode(token, list);
+				if (checkMessage(token)) {
+					printf("\nList %s\n", token);
+					list = addNode(token, list);
+				}
 			}
 			
 		}
@@ -169,11 +183,10 @@ T_list getOneMessage(T_list list, char data[]) {
 	return list;
 }
 
-int parseMessage(char data[], int* code, int* id, int* position, int* speed) {
-	if (strlen(data) > 5) {
+T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;
 		char delim[] = SEPARATOR;
-		ptr = strtok(data, delim);
+		ptr = strtok(list->data, delim);
 		*code = atoi(ptr);
 		ptr = strtok(NULL, delim);
 		*id = atoi(ptr);
@@ -181,10 +194,8 @@ int parseMessage(char data[], int* code, int* id, int* position, int* speed) {
 		*position = atoi(ptr);
 		ptr = strtok(NULL, MESSAGE_END);
 		*speed = atoi(ptr);	
-		return 1;
-	} else {
-		return 0;
-	}
+		list = removeFirstNode(list);
+		return list;
 }
 
 

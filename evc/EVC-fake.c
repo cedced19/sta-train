@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 		} else {
 			trainid = TRAIN_ID;
 		}
+		printf("trainid: %d\n", trainid);
 
         struct sockaddr_in addr_rbc;
 		printf("Connection en cours \n");
@@ -57,9 +58,10 @@ int main(int argc, char *argv[])
 		CHECK_ERROR_DIFFERENT("Impossible de se connecter au serveur", connect(sock, (struct sockaddr*)&addr_rbc, sizeof(addr_rbc)), 0);
 		
 		printf("Connection OK \n");
-
-		sendData(sock, 1, trainid, -1, -1);
-
+		while(1){
+			sendData(sock, 1, trainid, 200, -1);
+			sleep(1);
+		}
 		printf("Train auth OK \n");
 		
 
