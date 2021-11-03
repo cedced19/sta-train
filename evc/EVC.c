@@ -355,12 +355,7 @@ int main(int argc, char *argv[])
 				} else {
 					list = getOneMessage(list,data);
 					while (list !=NULL) {
-						if(parseMessage(list->data, &code, &id, &position, &speed) == 0) {
-							if (list!=NULL) {
-								list = removeFirstNode(list);
-							}
-							break;
-						}
+						list = parseMessage(list, &code, &id, &position, &speed);
 						// Debug info
 						/*
 						printf("Code %d\n",code);
