@@ -3,7 +3,7 @@
 
 #define SEPARATOR ":"
 #define MESSAGE_END "$$"
-#define MAX_MSG_SIZE 1024
+#define MAX_MSG_SIZE 256
 
 #define PORT_NUMBER 4242
 #define MAX_REQUEST 5
@@ -156,14 +156,51 @@ int checkMessage(char data[]) {
 	return 1;
 }
 
+int strpos(char *hay, char *needle, int offset)
+{
+	char haystack[strlen(hay)];
+	strncpy(haystack, hay+offset, strlen(hay)-offset);
+	char *p = strstr(haystack, needle);
+	if (p)
+		return p - haystack+offset;
+	return -1;
+}
+
 // parse the receive message to extract a single message for later exploitation
-T_list getOneMessage(T_list list, char data[]) {
+/*T_list splitMessages(T_list list, char data[]) {
+	if (strlen(data) > 1) {		
+		char* token;
+		if (strpos(data, MESSAGE_END, 0)>=7){  // check if the message is full  
+			token = strtok(data, MESSAGE_END); // cut in two parts //
+			list = addNode(token, list);
+			printf("Message ok : %s\n", token);
+
+			// get all remaining messages from token
+			while( token != NULL ) {
+				if (strpos(token, MESSAGE_END, 0)>=0){token = strtok(NULL, MESSAGE_END);} 
+				printf("%s\n", token);	
+				printf("%d\n",strpos(token, MESSAGE_END, 0));
+				if (strpos(token, MESSAGE_END, 0)>=7){ // 
+					if (token != NULL) {
+						if (checkMessage(token)) {
+							printf("\nList %s\n", token);
+							list = addNode(token, list);
+						}
+					}
+				}
+			}
+		} 
+	}
+	return list;
+}
+*/
+T_list splitMessages(T_list list, char data[]) {
 	if (strlen(data) > 1) {		
 		char* token;
 		// get first message 
 		token = strtok(data, MESSAGE_END); // cut in two parts
 		if (checkMessage(token)) {
-			printf("\nList %s\n", token);
+			//printf("\nList %s\n", token);
 			list = addNode(token, list);
 		}
 		
@@ -171,9 +208,11 @@ T_list getOneMessage(T_list list, char data[]) {
 		// get all remaining messages from token
 		while( token != NULL ) {
 			token = strtok(NULL, MESSAGE_END);
+			//data+=2; //remove $$ from $$1:5:... 
+			//token = strtok(data, MESSAGE_END); // extract token from 1:5:1:1$$...
 			if (token != NULL) {
 				if (checkMessage(token)) {
-					printf("\nList %s\n", token);
+					//printf("\nList other msg %s\n", token); // quasi certain que ca n'apparait jamais ca ... strtok l.210 renvoit tjrs NULL car strtok(str, delim)
 					list = addNode(token, list);
 				}
 			}
@@ -182,6 +221,7 @@ T_list getOneMessage(T_list list, char data[]) {
 	}
 	return list;
 }
+
 
 T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;

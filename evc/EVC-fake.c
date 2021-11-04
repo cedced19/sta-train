@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		printf("Connection OK \n");
 		while(1){
 			sendData(sock, 1, trainid, 200, -1);
-			sleep(1);
+			usleep(25000);
 		}
 		printf("Train auth OK \n");
 		
