@@ -3,7 +3,9 @@
         "*.rmd": "markdown",
         "loco_parametres.h": "c",
         "evc.h": "c",
-        "in.h": "c"
+        "in.h": "c",
+        "controlador.h": "c",
+        "rtwtypes.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
