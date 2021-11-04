@@ -45,8 +45,9 @@ void* connection_handler(void *socket_desc){
                 perror("Ending connection\n");
                 break;
             } else {
-                list = getOneMessage(list, message);
-                // showList(list);
+                list = NULL;
+                list = splitMessages(list, message);
+                showList(list);
                 while (list != NULL)
                 {
                     list = parseMessage(list, &code, &id, &pos, &speed);
@@ -61,10 +62,10 @@ void* connection_handler(void *socket_desc){
                             {
                                 trainsList = addTrain(id, pos, speed, trainsList);
                                 // pthread_mutex_lock(&mutex);
-                                printf("in mutex\n");
+                                // printf("in mutex\n");
                                 orderTrain(trainsList);
                                 // pthread_mutex_unlock(&mutex);
-                                printf("after order train");
+                                //printf("after order train");
                             }
                             sendData(sock, 2, id, -1, -1);
                             break;
@@ -85,12 +86,12 @@ void* connection_handler(void *socket_desc){
                             sendData(sock, 4, id, pos, speed); //send ack 
                             break;
                         case 5: // send command
-                            printf("speed request ack from train %i\n", id);
+                            printf("Speed request ack from train %i\n", id);
                             break;
                         default:
                             break;
                     }
-                    showTrains(trainsList);
+                    //showTrains(trainsList);
                     // list = removeFirstNode(list);
                     // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
                     sendData(sock, 6, id, -1, 40);

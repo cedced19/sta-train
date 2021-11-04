@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
 					perror("Connection closed while reading");
 					break;
 				} else {
-					list = getOneMessage(list,data);
+					list = splitMessages(list,data);
 					while (list !=NULL) {
 						list = parseMessage(list, &code, &id, &position, &speed);
 						// Debug info
@@ -365,7 +365,9 @@ int main(int argc, char *argv[])
 						*/
 
 						if (id != train1.id) {
-							list = removeFirstNode(list);
+							if (list != NULL) {
+								list = removeFirstNode(list);
+							}
 							continue;
 						}
 						printf("Message received with code %d\n", code);
@@ -396,7 +398,6 @@ int main(int argc, char *argv[])
 								break;
 						}
 
-						list = removeFirstNode(list);
 					}
 				}
 			}
