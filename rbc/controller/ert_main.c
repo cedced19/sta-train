@@ -54,10 +54,10 @@ void rt_OneStep(void)
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
   controller_U.Position = 0;
-  controller_U.Position_2 = 0;
-  controller_U.Vitesse_Consigne = 24;
-  controller_U.Vitesse_Reelle = 25;
-  controller_U.Light = 0.5;
+  controller_U.Position_2 = 20000;
+  controller_U.Vitesse_Consigne = 3;
+  controller_U.Vitesse_Reelle = 88;
+  controller_U.Light = 0;
 
   /* Step the model for base rate */
   controller_step();
@@ -93,12 +93,13 @@ int_T main(int_T argc, const char *argv[])
   /* Simulating the model step behavior (in non real-time) to
    *  simulate model behavior at stop time.
    */
- 
+  
+  while ((rtmGetErrorStatus(controller_M) == (NULL)) && !rtmGetStopRequested
+         (controller_M)) {
     rt_OneStep();
-  rt_OneStep();
-  rt_OneStep();
-  rt_OneStep();
-  rt_OneStep();
+    usleep(34000);
+  }
+  
 
   /* Disable rt_OneStep() here */
 
