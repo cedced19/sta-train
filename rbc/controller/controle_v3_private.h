@@ -3,13 +3,13 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * File: controller_private.h
+ * File: controle_v3_private.h
  *
- * Code generated for Simulink model 'controller'.
+ * Code generated for Simulink model 'controle_v3'.
  *
- * Model version                  : 2.4
+ * Model version                  : 2.1
  * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
- * C/C++ source code generated on : Thu Nov  4 16:05:23 2021
+ * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -17,9 +17,10 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_controller_private_h_
-#define RTW_HEADER_controller_private_h_
+#ifndef RTW_HEADER_controle_v3_private_h_
+#define RTW_HEADER_controle_v3_private_h_
 #include "rtwtypes.h"
+#include "builtin_typeid_types.h"
 
 /* Private macros used by the generated code to access rtModel */
 #ifndef rtmIsMajorTimeStep
@@ -35,9 +36,9 @@
 #endif
 
 /* private model entry point functions */
-extern void controller_derivatives(void);
+extern void controle_v3_derivatives(void);
 
-#endif                                 /* RTW_HEADER_controller_private_h_ */
+#endif                                 /* RTW_HEADER_controle_v3_private_h_ */
 
 /*
  * File trailer for generated code.

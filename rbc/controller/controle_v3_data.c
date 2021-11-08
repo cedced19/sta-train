@@ -3,25 +3,25 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * File: CONTROLADOR_data.c
+ * File: controle_v3_data.c
  *
- * Code generated for Simulink model 'CONTROLADOR'.
+ * Code generated for Simulink model 'controle_v3'.
  *
- * Model version                  : 1.3
- * Simulink Coder version         : 9.4 (R2020b) 29-Jul-2020
- * C/C++ source code generated on : Thu Nov  4 05:56:59 2021
+ * Model version                  : 2.1
+ * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
+ * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
  *
  * Target selection: ert.tlc
- * Embedded hardware selection: Intel->x86-64 (Windows64)
+ * Embedded hardware selection: Intel->x86-64 (Linux 64)
  * Code generation objectives: Unspecified
  * Validation result: Not run
  */
 
-#include "CONTROLADOR.h"
-#include "CONTROLADOR_private.h"
+#include "controle_v3.h"
+#include "controle_v3_private.h"
 
 /* Block parameters (default storage) */
-P_CONTROLADOR_T CONTROLADOR_P = {
+P_controle_v3_T controle_v3_P = {
   /* Variable: Observer
    * Referenced by: '<Root>/Gain5'
    */

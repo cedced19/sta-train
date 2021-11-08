@@ -3,13 +3,13 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * File: controller_types.h
+ * File: controle_v3_capi.h
  *
- * Code generated for Simulink model 'controller'.
+ * Code generated for Simulink model 'controle_v3'.
  *
- * Model version                  : 2.4
+ * Model version                  : 2.1
  * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
- * C/C++ source code generated on : Thu Nov  4 16:05:23 2021
+ * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: Intel->x86-64 (Linux 64)
@@ -17,15 +17,13 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_controller_types_h_
-#define RTW_HEADER_controller_types_h_
+#ifndef RTW_HEADER_controle_v3_capi_h_
+#define RTW_HEADER_controle_v3_capi_h_
+#include "controle_v3.h"
 
-/* Model Code Variants */
+extern void controle_v3_InitializeDataMapInfo(void);
 
-/* Forward declaration for rtModel */
-typedef struct tag_RTM_controller_T RT_MODEL_controller_T;
-
-#endif                                 /* RTW_HEADER_controller_types_h_ */
+#endif                                 /* RTW_HEADER_controle_v3_capi_h_ */
 
 /*
  * File trailer for generated code.

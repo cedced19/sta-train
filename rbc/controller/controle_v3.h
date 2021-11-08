@@ -3,32 +3,42 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * File: CONTROLADOR.h
+ * File: controle_v3.h
  *
- * Code generated for Simulink model 'CONTROLADOR'.
+ * Code generated for Simulink model 'controle_v3'.
  *
- * Model version                  : 1.3
- * Simulink Coder version         : 9.4 (R2020b) 29-Jul-2020
- * C/C++ source code generated on : Thu Nov  4 05:56:59 2021
+ * Model version                  : 2.1
+ * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
+ * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
  *
  * Target selection: ert.tlc
- * Embedded hardware selection: Intel->x86-64 (Windows64)
+ * Embedded hardware selection: Intel->x86-64 (Linux 64)
  * Code generation objectives: Unspecified
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_CONTROLADOR_h_
-#define RTW_HEADER_CONTROLADOR_h_
-#ifndef CONTROLADOR_COMMON_INCLUDES_
-#define CONTROLADOR_COMMON_INCLUDES_
+#ifndef RTW_HEADER_controle_v3_h_
+#define RTW_HEADER_controle_v3_h_
+#include <string.h>
+#include "rtw_modelmap.h"
+#ifndef controle_v3_COMMON_INCLUDES_
+#define controle_v3_COMMON_INCLUDES_
 #include "rtwtypes.h"
 #include "rtw_continuous.h"
 #include "rtw_solver.h"
-#endif                                 /* CONTROLADOR_COMMON_INCLUDES_ */
+#endif                                 /* controle_v3_COMMON_INCLUDES_ */
 
-#include "CONTROLADOR_types.h"
+#include "controle_v3_types.h"
 
 /* Macros for accessing real-time model data structure */
+#ifndef rtmGetDataMapInfo
+#define rtmGetDataMapInfo(rtm)         ((rtm)->DataMapInfo)
+#endif
+
+#ifndef rtmSetDataMapInfo
+#define rtmSetDataMapInfo(rtm, val)    ((rtm)->DataMapInfo = (val))
+#endif
+
 #ifndef rtmGetErrorStatus
 #define rtmGetErrorStatus(rtm)         ((rtm)->errorStatus)
 #endif
@@ -61,33 +71,34 @@
 typedef struct {
   real_T Sum;                          /* '<Root>/Sum' */
   real_T Sum2;                         /* '<Root>/Sum2' */
-} B_CONTROLADOR_T;
+} B_controle_v3_T;
 
 /* Continuous states (default storage) */
 typedef struct {
   real_T Integrator_CSTATE;            /* '<Root>/Integrator' */
   real_T Integrator1_CSTATE;           /* '<Root>/Integrator1' */
-} X_CONTROLADOR_T;
+} X_controle_v3_T;
 
 /* State derivatives (default storage) */
 typedef struct {
   real_T Integrator_CSTATE;            /* '<Root>/Integrator' */
   real_T Integrator1_CSTATE;           /* '<Root>/Integrator1' */
-} XDot_CONTROLADOR_T;
+} XDot_controle_v3_T;
 
 /* State disabled  */
 typedef struct {
   boolean_T Integrator_CSTATE;         /* '<Root>/Integrator' */
   boolean_T Integrator1_CSTATE;        /* '<Root>/Integrator1' */
-} XDis_CONTROLADOR_T;
+} XDis_controle_v3_T;
 
-#ifndef ODE1_INTG
-#define ODE1_INTG
+#ifndef ODE4_INTG
+#define ODE4_INTG
 
-/* ODE1 Integration Data */
+/* ODE4 Integration Data */
 typedef struct {
-  real_T *f[1];                        /* derivatives */
-} ODE1_IntgData;
+  real_T *y;                           /* output */
+  real_T *f[4];                        /* derivatives */
+} ODE4_IntgData;
 
 #endif
 
@@ -95,18 +106,18 @@ typedef struct {
 typedef struct {
   real_T Vitesse_Consigne;             /* '<Root>/Vitesse_Consigne' */
   real_T Light;                        /* '<Root>/Light' */
-  real_T Posiction;                    /* '<Root>/Posiction ' */
-  real_T Posiciton_2;                  /* '<Root>/Posiciton_2' */
-  real_T Vitesse_Reele;                /* '<Root>/Vitesse_Reele' */
-} ExtU_CONTROLADOR_T;
+  real_T Position;                     /* '<Root>/Position ' */
+  real_T Position_2;                   /* '<Root>/Position_2' */
+  real_T Vitesse_Reelle;               /* '<Root>/Vitesse_Reelle' */
+} ExtU_controle_v3_T;
 
 /* External outputs (root outports fed by signals with default storage) */
 typedef struct {
-  real_T Vitesse_Envoyer;              /* '<Root>/Vitesse_Envoyer' */
-} ExtY_CONTROLADOR_T;
+  real_T Vitesse_Envoyee;              /* '<Root>/Vitesse_Envoyee' */
+} ExtY_controle_v3_T;
 
 /* Parameters (default storage) */
-struct P_CONTROLADOR_T_ {
+struct P_controle_v3_T_ {
   struct_ALRDS3SSLkjlF2CmbmN2xD Observer;/* Variable: Observer
                                           * Referenced by: '<Root>/Gain5'
                                           */
@@ -143,10 +154,10 @@ struct P_CONTROLADOR_T_ {
 };
 
 /* Real-time Model Data Structure */
-struct tag_RTM_CONTROLADOR_T {
+struct tag_RTM_controle_v3_T {
   const char_T *errorStatus;
   RTWSolverInfo solverInfo;
-  X_CONTROLADOR_T *contStates;
+  X_controle_v3_T *contStates;
   int_T *periodicContStateIndices;
   real_T *periodicContStateRanges;
   real_T *derivs;
@@ -154,8 +165,18 @@ struct tag_RTM_CONTROLADOR_T {
   boolean_T zCCacheNeedsReset;
   boolean_T derivCacheNeedsReset;
   boolean_T CTOutputIncnstWithState;
-  real_T odeF[1][2];
-  ODE1_IntgData intgData;
+  real_T odeY[2];
+  real_T odeF[4][2];
+  ODE4_IntgData intgData;
+
+  /*
+   * DataMapInfo:
+   * The following substructure contains information regarding
+   * structures generated in the model's C API.
+   */
+  struct {
+    rtwCAPI_ModelMappingInfo mmi;
+  } DataMapInfo;
 
   /*
    * Sizes:
@@ -186,27 +207,31 @@ struct tag_RTM_CONTROLADOR_T {
 };
 
 /* Block parameters (default storage) */
-extern P_CONTROLADOR_T CONTROLADOR_P;
+extern P_controle_v3_T controle_v3_P;
 
 /* Block signals (default storage) */
-extern B_CONTROLADOR_T CONTROLADOR_B;
+extern B_controle_v3_T controle_v3_B;
 
 /* Continuous states (default storage) */
-extern X_CONTROLADOR_T CONTROLADOR_X;
+extern X_controle_v3_T controle_v3_X;
 
 /* External inputs (root inport signals with default storage) */
-extern ExtU_CONTROLADOR_T CONTROLADOR_U;
+extern ExtU_controle_v3_T controle_v3_U;
 
 /* External outputs (root outports fed by signals with default storage) */
-extern ExtY_CONTROLADOR_T CONTROLADOR_Y;
+extern ExtY_controle_v3_T controle_v3_Y;
 
 /* Model entry point functions */
-extern void CONTROLADOR_initialize(void);
-extern void CONTROLADOR_step(void);
-extern void CONTROLADOR_terminate(void);
+extern void controle_v3_initialize(void);
+extern void controle_v3_step(void);
+extern void controle_v3_terminate(void);
+
+/* Function to get C API Model Mapping Static Info */
+extern const rtwCAPI_ModelMappingStaticInfo*
+  controle_v3_GetCAPIStaticMap(void);
 
 /* Real-time Model object */
-extern RT_MODEL_CONTROLADOR_T *const CONTROLADOR_M;
+extern RT_MODEL_controle_v3_T *const controle_v3_M;
 
 /*-
  * The generated code includes comments that allow you to trace directly
@@ -222,12 +247,12 @@ extern RT_MODEL_CONTROLADOR_T *const CONTROLADOR_M;
  *
  * Here is the system hierarchy for this model
  *
- * '<Root>' : 'CONTROLADOR'
- * '<S1>'   : 'CONTROLADOR/MATLAB Function'
- * '<S2>'   : 'CONTROLADOR/Subsystem'
- * '<S3>'   : 'CONTROLADOR/Subsystem/MATLAB Function'
+ * '<Root>' : 'controle_v3'
+ * '<S1>'   : 'controle_v3/MATLAB Function'
+ * '<S2>'   : 'controle_v3/Subsystem'
+ * '<S3>'   : 'controle_v3/Subsystem/MATLAB Function'
  */
-#endif                                 /* RTW_HEADER_CONTROLADOR_h_ */
+#endif                                 /* RTW_HEADER_controle_v3_h_ */
 
 /*
  * File trailer for generated code.
