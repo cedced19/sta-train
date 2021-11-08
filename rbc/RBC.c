@@ -36,10 +36,18 @@ float time_diff(struct timeval *start, struct timeval *end) {
 ///////////////////////////////////////////
 void periodSending(int signo) {
     Train* train = selectTrain(1,trainsList);
-    showTrains(train);
+    static int initialized = 0;
+    //showTrains(train);
 	if (train != NULL) {
-        onestep(trainsList);
-        sendData(trainsList->sock, 6, trainsList->id, trainsList->pos, trainsList->speed);
+        if (train->pos != -1) {
+            if (initialized == 0) {
+                printf("Initializing\n");
+                controller_initialize();
+                initialized = 1;
+            }
+            onestep(trainsList);
+            sendData(trainsList->sock, 6, trainsList->id, trainsList->pos, trainsList->speed);
+        }
     }
 } 
 
@@ -360,7 +368,7 @@ int main(int argc, char *argv[])
 
     struct itimerval timer;
     timer.it_interval.tv_sec=0;
-	timer.it_interval.tv_usec=20000; 
+	timer.it_interval.tv_usec=34000; 
 	timer.it_value=timer.it_interval;
 
     // Add clock 
@@ -403,7 +411,7 @@ int main(int argc, char *argv[])
     int new_socket;
     trainsList=addTrain(0,-1,-1,-1,NULL);
 
-    controller_initialize();
+
     gettimeofday(&lastCall, NULL);
 
     while ((new_socket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)))

@@ -24,6 +24,7 @@ unsigned char status, varDebug1, varDebug2;
 int periodDuration, sendingDuration;
 struct timeval startPeriod, endPeriod; 
 struct timeval startSendingPeriod, endSendingPeriod; 
+struct timeval startErrorTemp, endErrorTemp; 
 
 //////////////////////////////////////////
 /// Signal handler
@@ -37,14 +38,14 @@ void periodSending(int signo) {
     //printf("Cycle duration %d us\n",periodDuration);
 
 	sendingDuration = (endSendingPeriod.tv_sec*100000+endSendingPeriod.tv_usec)-(startSendingPeriod.tv_sec*100000+startSendingPeriod.tv_usec);
-	if (sendingDuration > 100000) { // send a messsage at least each second
+	//if (sendingDuration > 100000) { // send a messsage at least each second
 		if (train1.connected && train1.positionDone) {
 			status = sendData(train1.sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
 			if (status) {
 				startSendingPeriod=endSendingPeriod;
 			}
 		}
-	}
+	//}
 
 	startPeriod=endPeriod;
 } 
@@ -312,7 +313,17 @@ int main(int argc, char *argv[])
 			// Create socket
 			sock = socket(AF_INET, SOCK_STREAM, 0);
 			if (sock == -1) {
-				perror("Impossible de se connecter");
+				stopTrain();
+				perror("Unable to create socket");
+				gettimeofday(&startErrorTemp,NULL); 
+				close(sock);
+				printf("Waiting 5s...\n");
+				while(1) {
+					gettimeofday(&endErrorTemp,NULL);
+					if (endErrorTemp.tv_sec-startErrorTemp.tv_sec > 4) {
+						break;
+					}
+				}
 				continue;
 			}
 			printf("Socket OK \n");
@@ -327,7 +338,17 @@ int main(int argc, char *argv[])
 			addr_rbc.sin_port = htons(serverPort);
 
 			if (connect(sock, (struct sockaddr*)&addr_rbc, sizeof(addr_rbc)) != 0) {
+				stopTrain();
 				perror("Unable to connect to the RBC");
+				gettimeofday(&startErrorTemp,NULL); 
+				close(sock);
+				printf("Waiting 5s...\n");
+				while(1) {
+					gettimeofday(&endErrorTemp,NULL);
+					if (endErrorTemp.tv_sec-startErrorTemp.tv_sec > 4) {
+						break;
+					}
+				}
 				continue;
 			}
 
