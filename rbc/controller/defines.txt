@@ -1,4 +1,4 @@
-MODEL=controller
+MODEL=controle_v3
 NUMST=2
 NCSTATES=2
 HAVESTDIO

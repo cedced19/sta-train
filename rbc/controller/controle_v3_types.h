@@ -3,23 +3,24 @@
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * File: CONTROLADOR_types.h
+ * File: controle_v3_types.h
  *
- * Code generated for Simulink model 'CONTROLADOR'.
+ * Code generated for Simulink model 'controle_v3'.
  *
- * Model version                  : 1.3
- * Simulink Coder version         : 9.4 (R2020b) 29-Jul-2020
- * C/C++ source code generated on : Thu Nov  4 05:56:59 2021
+ * Model version                  : 2.1
+ * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
+ * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
  *
  * Target selection: ert.tlc
- * Embedded hardware selection: Intel->x86-64 (Windows64)
+ * Embedded hardware selection: Intel->x86-64 (Linux 64)
  * Code generation objectives: Unspecified
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_CONTROLADOR_types_h_
-#define RTW_HEADER_CONTROLADOR_types_h_
+#ifndef RTW_HEADER_controle_v3_types_h_
+#define RTW_HEADER_controle_v3_types_h_
 #include "rtwtypes.h"
+#include "builtin_typeid_types.h"
 
 /* Model Code Variants */
 #ifndef DEFINED_TYPEDEF_FOR_struct_ALRDS3SSLkjlF2CmbmN2xD_
@@ -38,12 +39,12 @@ typedef struct {
 #endif
 
 /* Parameters (default storage) */
-typedef struct P_CONTROLADOR_T_ P_CONTROLADOR_T;
+typedef struct P_controle_v3_T_ P_controle_v3_T;
 
 /* Forward declaration for rtModel */
-typedef struct tag_RTM_CONTROLADOR_T RT_MODEL_CONTROLADOR_T;
+typedef struct tag_RTM_controle_v3_T RT_MODEL_controle_v3_T;
 
-#endif                                 /* RTW_HEADER_CONTROLADOR_types_h_ */
+#endif                                 /* RTW_HEADER_controle_v3_types_h_ */
 
 /*
  * File trailer for generated code.
