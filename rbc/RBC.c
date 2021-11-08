@@ -7,14 +7,88 @@
 #include <pthread.h>
 #include <math.h>
 #include "RBC.h"
-#include <pthread.h>
+#include <unistd.h>
+#include <sys/time.h>
 
 #define MAXLEN 500
 
+// Controller
+#include "controller/controller.h"            
+#include "controller/rtwtypes.h"
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
+struct timeval lastCall;
+struct timeval currentCall;
+
 
 Train *trainsList=NULL;
 
+float time_diff(struct timeval *start, struct timeval *end) {
+    return (end->tv_sec - start->tv_sec) + 1e-6*(end->tv_usec - start->tv_usec);
+}
+
+void onestep(Train *train)
+{
+  static boolean_T OverrunFlag = false;
+  gettimeofday(&currentCall, NULL);
+  // time between last call
+  printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
+
+  printf("\nonestep begin\n");
+
+  
+
+  /* Disable interrupts here */
+
+  /* Check for overrun */
+  if (OverrunFlag) {
+    rtmSetErrorStatus(controller_M, "Overrun");
+    return;
+  }
+
+  OverrunFlag = true;
+
+  /* Save FPU context here (if necessary) */
+  /* Re-enable timer or interrupt here */
+  /* Set model inputs here */
+  controller_U.Position = (double) train->pos;
+  controller_U.Position_2 = (double) train->pos+20000;
+  controller_U.Vitesse_Consigne = (double) train->speed;
+  controller_U.Vitesse_Reelle = (double) train->speedMeasured;
+  controller_U.Light = (double) 1;
+
+  // Log all inputs
+  printf("Postion 1 %f\n", controller_U.Position);
+  printf("Postion 2 %f\n", controller_U.Position_2);
+  printf("Vitesse Consigne %f\n", controller_U.Vitesse_Consigne);
+  printf("Vitesse Reelle %f\n", controller_U.Vitesse_Reelle);
+  printf("Light %f\n", controller_U.Light);
+
+  /* Step the model for base rate */
+  controller_step();
+
+  
+
+  /* Get model outputs here */
+  // Log all outputs here
+  printf("Vitesse consigne %d\n", (int) controller_Y.Vitesse_Envoyee);
+
+  train->speed = (int) controller_Y.Vitesse_Envoyee;
+
+  /* Indicate task complete */
+  OverrunFlag = false;
+
+
+  printf("\nonestep end\n");
+
+  gettimeofday(&lastCall, NULL);
+  printf("\nDuration of onestep: %0.8f\n", time_diff(&currentCall, &lastCall));
+
+  /* Disable interrupts here */
+  /* Restore FPU context here (if necessary) */
+  /* Enable interrupts here */
+}
 
 void * orderTrain2(Train * trains){
     while(trains->id!=0){   
@@ -72,18 +146,21 @@ void* connection_handler(void *socket_desc){
                         case 3: // receive position/speed
                             // store data
                             printf("Received speed/position from train %i\n", id);
-                            if (!selectTrain(id, trainsList))
+                            Train * train = selectTrain(id, trainsList);
+                            if (!train)
                             {
                                 trainsList = addTrain(id,pos,speed, trainsList);  
                                 // pthread_mutex_lock(&mutex);
                                 orderTrain(trainsList);
                                 // pthread_mutex_unlock(&mutex);
+                                train = trainsList;
                             }
                             else
                             {
                                 storeData(id,pos,speed,trainsList);
                             }
-                            sendData(sock, 4, id, pos, speed); //send ack 
+                            onestep(train);
+                            sendData(sock, 4, id, pos, train->speed); //send ack 
                             break;
                         case 5: // send command
                             printf("Speed request ack from train %i\n", id);
@@ -94,7 +171,7 @@ void* connection_handler(void *socket_desc){
                     //showTrains(trainsList);
                     // list = removeFirstNode(list);
                     // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
-                    sendData(sock, 6, id, -1, 40);
+                    //sendData(sock, 6, id, -1, 40);
 
                     //showList(list);
                     printf("Message done!\n");
@@ -119,6 +196,7 @@ static Train * newTrain(int id, int pos, int speed) {
 Train * addTrain (int id, int pos, int speed, Train *trains) { 
 	Train * train; 
 	train = newTrain(id, pos, speed); 
+    train->speed = 0;
 	train->nextTrain = trains; 
 	return train;
 }
@@ -151,7 +229,7 @@ Train * selectTrainByOrder (int orderTrain, Train *trains) {
 void * storeData(int id_train, int pos, int speed, Train * trains){
     trains=selectTrain(id_train, trains);
     trains->pos=pos;
-    trains->speed=speed;
+    trains->speedMeasured=speed;
     return NULL;
 }
 
@@ -296,6 +374,9 @@ int main(int argc, char *argv[])
     int new_socket;
     trainsList=addTrain(0,-1,-1,NULL);
 
+    controller_initialize();
+    gettimeofday(&lastCall, NULL);
+
     while ((new_socket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)))
     {
         int *new_sock = malloc(1);
@@ -310,4 +391,5 @@ int main(int argc, char *argv[])
         pthread_detach(thread);
         puts("New connection assigned to handler");
     }
+    controller_terminate();
 }

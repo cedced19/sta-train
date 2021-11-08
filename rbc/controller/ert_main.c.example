@@ -53,11 +53,11 @@ void rt_OneStep(void)
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
-  controller_U.Position = 0;
+  controller_U.Position = 51;
   controller_U.Position_2 = 20000;
-  controller_U.Vitesse_Consigne = 3;
+  controller_U.Vitesse_Consigne = 88;
   controller_U.Vitesse_Reelle = 88;
-  controller_U.Light = 0;
+  controller_U.Light = 1;
 
   /* Step the model for base rate */
   controller_step();
