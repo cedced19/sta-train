@@ -9,7 +9,7 @@
 #include "RBC.h"
 #include <pthread.h>
 
-#define MAXLEN 500
+#define MAXLEN 1000
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
 
@@ -27,9 +27,9 @@ void * orderTrain2(Train * trains){
 
 void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
-    char message[MAXLEN];
     int read_size;
     T_list list = NULL;
+    char message[MAXLEN];
     int code;
     int id;
     int pos;
@@ -37,69 +37,76 @@ void* connection_handler(void *socket_desc){
 
 
     do {
-            int read = read_size = recv(sock , message , MAXLEN , 0);
-            if (read < 0) {
-                    perror("Reading stream message");
-            } else if (read == 0) {
-                // TODO remove train
-                perror("Ending connection\n");
-                break;
-            } else {
-                list = NULL;
-                list = splitMessages(list, message);
-                showList(list);
-                while (list != NULL)
-                {
-                    list = parseMessage(list, &code, &id, &pos, &speed);
-                   
-
-                    printf("Responding new message from %i with code %i\n", id, code);
-                    switch(code){
-
-                        case 1: // ack connection
-                            printf("Received initialization from train %i\n", id);
-                            if (!selectTrain(id, trainsList))
-                            {
-                                trainsList = addTrain(id, pos, speed, trainsList);
-                                // pthread_mutex_lock(&mutex);
-                                // printf("in mutex\n");
-                                orderTrain(trainsList);
-                                // pthread_mutex_unlock(&mutex);
-                                //printf("after order train");
-                            }
-                            sendData(sock, 2, id, -1, -1);
-                            break;
-                        case 3: // receive position/speed
-                            // store data
-                            printf("Received speed/position from train %i\n", id);
-                            if (!selectTrain(id, trainsList))
-                            {
-                                trainsList = addTrain(id,pos,speed, trainsList);  
-                                // pthread_mutex_lock(&mutex);
-                                orderTrain(trainsList);
-                                // pthread_mutex_unlock(&mutex);
-                            }
-                            else
-                            {
-                                storeData(id,pos,speed,trainsList);
-                            }
-                            sendData(sock, 4, id, pos, speed); //send ack 
-                            break;
-                        case 5: // send command
-                            printf("Speed request ack from train %i\n", id);
-                            break;
-                        default:
-                            break;
+            bzero(message, MAXLEN);
+            printf("boucle\n");
+            	if( (read_size = recv(sock , message , MAXLEN , 0)) < 0)
+                    {
+                        puts("recv failed");
                     }
-                    //showTrains(trainsList);
-                    // list = removeFirstNode(list);
-                    // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
-                    sendData(sock, 6, id, -1, 40);
+                    puts("done");
+                if (read_size < 0) {
+                    perror("Reading stream message");
+                } else if (read_size == 0) {
+                    // TODO remove train
+                    perror("Ending connection\n");
+                    break;
+                } else {
+                    list = NULL;
+                    list = splitMessages(list, message);
+                    if (list){
+                        showList(list);
+                        if(strlen(list->data) > 7){
+                        list = parseMessage(list, &code, &id, &pos, &speed);
+                        }
+                        printf("%d: %d: %d: %d\n", code, id,pos,speed);
+                        if(code>0 && id>0 && pos>0 && speed==-1){
+                        printf("Responding new message from %i with code %i\n", id, code);
+                        switch(code){
 
-                    //showList(list);
+                            case 1: // ack connection
+                                printf("Received initialization from train %i\n", id);
+                                if (!selectTrain(id, trainsList))
+                                {
+                                    trainsList = addTrain(id, pos, speed, trainsList);
+                                    // pthread_mutex_lock(&mutex);
+                                    // printf("in mutex\n");
+                                    orderTrain(trainsList);
+                                    // pthread_mutex_unlock(&mutex);
+                                    //printf("after order train");
+                                }
+                                sendData(sock, 2, id, -1, -1);
+                                break;
+                            case 3: // receive position/speed
+                                // store data
+                                printf("Received speed/position from train %i\n", id);
+                                if (!selectTrain(id, trainsList))
+                                {
+                                    trainsList = addTrain(id,pos,speed, trainsList);  
+                                    // pthread_mutex_lock(&mutex);
+                                    orderTrain(trainsList);
+                                    // pthread_mutex_unlock(&mutex);
+                                }
+                                else
+                                {
+                                    storeData(id,pos,speed,trainsList);
+                                }
+                                sendData(sock, 4, id, pos, speed); //send ack 
+                                break;
+                            case 5: // send command
+                                printf("Speed request ack from train %i\n", id);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                
+                        
+                    //showTrains(trainsList);
+                    // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
+                    sendData(sock, 6, 1, -1, 40);
                     printf("Message done!\n");
-                };
-            }
+                };}
+            
     } while(1);
     return NULL;
 }
