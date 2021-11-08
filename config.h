@@ -69,12 +69,10 @@ T_node * addNode (T_elt e, T_node * node) {
 
 
 void showList(T_list l) {
-	printf("Start reading\n");
 	while(l != NULL) {
 		printf("%s \n", toString(l->data));
 		l = l->pNext; 
 	}
-	printf("End list reading\n");
 }
 
 void freeList(T_list l) {
@@ -195,7 +193,7 @@ int strpos(char *hay, char *needle, int offset)
 }
 */
 T_list splitMessages(T_list list, char data[]) {
-	if (strlen(data) > 1) {		
+	if (strlen(data) > 6) {	
 		char* token;
 		// get first message 
 		token = strtok(data, MESSAGE_END); // cut in two parts
@@ -226,16 +224,15 @@ T_list splitMessages(T_list list, char data[]) {
 T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;
 		char delim[] = SEPARATOR;
-		ptr = strtok(list->data, delim);
-		*code = atoi(ptr);
-		ptr = strtok(NULL, delim);
-		*id = atoi(ptr);
-		ptr = strtok(NULL, delim);
-		*position = atoi(ptr);
-		ptr = strtok(NULL, MESSAGE_END);
-		*speed = atoi(ptr);	
-		list = removeFirstNode(list);
-		return list;
+		if((ptr = strtok(list->data, delim))){
+		*code = atoi(ptr);}
+		if((ptr = strtok(NULL, delim))){
+		*id = atoi(ptr);}
+		if((ptr = strtok(NULL, delim))){
+		*position = atoi(ptr);}
+		if((ptr = strtok(NULL, MESSAGE_END))){
+		*speed = atoi(ptr);}
+		return removeFirstNode(list);
 }
 
 
