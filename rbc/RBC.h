@@ -9,6 +9,7 @@ typedef struct train {
 	int id;
 	int pos;
 	int speed;
+	int speedMeasured;
 	int order;
 	struct train *nextTrain;
 } Train;

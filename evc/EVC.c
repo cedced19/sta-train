@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
 									WriteVitesseConsigne(0,1);
 								}
 								break;
-							case 6:
+							case 4:
 								printf("Speed reference %d\n", speed);
 								WriteVitesseConsigne(speed, 1);
 								sendData(sock, 5, train1.id, (int)train1.position, speed);
