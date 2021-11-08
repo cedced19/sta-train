@@ -9,6 +9,7 @@
 #include "RBC.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <signal.h>
 
 #define MAXLEN 500
 
@@ -21,12 +22,26 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 struct timeval lastCall;
 struct timeval currentCall;
 
+void onestep(Train *train);
 
 Train *trainsList=NULL;
 
 float time_diff(struct timeval *start, struct timeval *end) {
     return (end->tv_sec - start->tv_sec) + 1e-6*(end->tv_usec - start->tv_usec);
 }
+
+//////////////////////////////////////////
+/// Signal handler
+/// SIGALARM
+///////////////////////////////////////////
+void periodSending(int signo) {
+    Train* train = selectTrain(1,trainsList);
+    showTrains(train);
+	if (train != NULL) {
+        onestep(trainsList);
+        sendData(trainsList->sock, 6, trainsList->id, trainsList->pos, trainsList->speed);
+    }
+} 
 
 void onestep(Train *train)
 {
@@ -36,6 +51,7 @@ void onestep(Train *train)
   printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
 
   printf("\nonestep begin\n");
+  printf("Current train id: %d\n", train->id);
 
   
 
@@ -52,8 +68,8 @@ void onestep(Train *train)
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
-  controller_U.Position = (double) train->pos;
-  controller_U.Position_2 = (double) train->pos+20000;
+  controller_U.Position = (double) train->pos+20000;
+  controller_U.Position_2 = (double) train->pos;
   controller_U.Vitesse_Consigne = (double) train->speed;
   controller_U.Vitesse_Reelle = (double) train->speedMeasured;
   controller_U.Light = (double) 1;
@@ -61,7 +77,7 @@ void onestep(Train *train)
   // Log all inputs
   printf("Postion 1 %f\n", controller_U.Position);
   printf("Postion 2 %f\n", controller_U.Position_2);
-  printf("Vitesse Consigne %f\n", controller_U.Vitesse_Consigne);
+  printf("Vitesse Consigne (Input) %f\n", controller_U.Vitesse_Consigne);
   printf("Vitesse Reelle %f\n", controller_U.Vitesse_Reelle);
   printf("Light %f\n", controller_U.Light);
 
@@ -72,7 +88,7 @@ void onestep(Train *train)
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne %d\n", (int) controller_Y.Vitesse_Envoyee);
+  printf("Vitesse consigne (Output) %d\n", (int) controller_Y.Vitesse_Envoyee);
 
   train->speed = (int) controller_Y.Vitesse_Envoyee;
 
@@ -134,7 +150,7 @@ void* connection_handler(void *socket_desc){
                             printf("Received initialization from train %i\n", id);
                             if (!selectTrain(id, trainsList))
                             {
-                                trainsList = addTrain(id, pos, speed, trainsList);
+                                trainsList = addTrain(id, pos, speed, sock, trainsList);
                                 // pthread_mutex_lock(&mutex);
                                 // printf("in mutex\n");
                                 orderTrain(trainsList);
@@ -149,7 +165,7 @@ void* connection_handler(void *socket_desc){
                             Train * train = selectTrain(id, trainsList);
                             if (!train)
                             {
-                                trainsList = addTrain(id,pos,speed, trainsList);  
+                                trainsList =  addTrain(id, pos, speed, sock, trainsList); 
                                 // pthread_mutex_lock(&mutex);
                                 orderTrain(trainsList);
                                 // pthread_mutex_unlock(&mutex);
@@ -159,8 +175,8 @@ void* connection_handler(void *socket_desc){
                             {
                                 storeData(id,pos,speed,trainsList);
                             }
-                            onestep(train);
-                            sendData(sock, 4, id, pos, train->speed); //send ack 
+                            //onestep(train);
+                            //sendData(sock, 4, id, pos, train->speed); //send ack 
                             break;
                         case 5: // send command
                             printf("Speed request ack from train %i\n", id);
@@ -181,23 +197,23 @@ void* connection_handler(void *socket_desc){
     return NULL;
 }
 
-static Train * newTrain(int id, int pos, int speed) {
+static Train * newTrain(int id, int pos, int speed, int sock) {
 	Train * train; 
 	CHECK_IF(train = malloc(sizeof(Train)), NULL, "malloc allocateNode"); 
 	train->id = id; 
 	train->pos = pos; 
 	train->speed = speed; 
     train->order = 0;
+    train->sock = sock;
 	train->nextTrain = NULL;
 	return train;
 }
 
 
-Train * addTrain (int id, int pos, int speed, Train *trains) { 
+Train * addTrain (int id, int pos, int speed, int sock, Train *trains) { 
 	Train * train; 
-	train = newTrain(id, pos, speed); 
-    train->speed = 0;
-	train->nextTrain = trains; 
+	train = newTrain(id, pos, speed, sock); 
+	train->nextTrain = trains;
 	return train;
 }
 
@@ -340,6 +356,19 @@ int main(int argc, char *argv[])
     int sock;
     struct sockaddr_in server, client;
 
+
+
+    struct itimerval timer;
+    timer.it_interval.tv_sec=0;
+	timer.it_interval.tv_usec=20000; 
+	timer.it_value=timer.it_interval;
+
+    // Add clock 
+	if (signal(SIGALRM, periodSending) == SIG_ERR)
+ 		printf("\nCannot catch signal SIGALARM\n");
+
+    setitimer(ITIMER_REAL, &timer,NULL);
+
     /* Create socket */
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
@@ -372,7 +401,7 @@ int main(int argc, char *argv[])
     puts("Listening");
     int c = sizeof(struct sockaddr_in);
     int new_socket;
-    trainsList=addTrain(0,-1,-1,NULL);
+    trainsList=addTrain(0,-1,-1,-1,NULL);
 
     controller_initialize();
     gettimeofday(&lastCall, NULL);
