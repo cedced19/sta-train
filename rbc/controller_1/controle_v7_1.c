@@ -17,6 +17,7 @@
  * Validation result: Not run
  */
 
+#include "../controller.h"
 #include "controle_v7_1.h"
 #include "controle_v7_1_private.h"
 
@@ -152,12 +153,12 @@ void controle_v7_1_step(void)
    */
   Dfrenage = controle_v7_1_U.Vitesse_Reelle * controle_v7_1_U.Vitesse_Reelle *
     0.03 + 0.28 * controle_v7_1_U.Vitesse_Reelle;
-  if (controle_v7_1_U.Distance <= 20.0) {
+  if (controle_v7_1_U.Distance <= DMIN) {
     Dfrenage = 0.0;
-  } else if ((20.0 < controle_v7_1_U.Distance) && (controle_v7_1_U.Distance <=
-              Dfrenage + 20.0)) {
-    Dfrenage = (controle_v7_1_U.Distance * controle_v7_1_U.Distance - 400.0) *
-      controle_v7_1_U.Vitesse_Consigne / ((Dfrenage + 20.0) * (Dfrenage + 20.0));
+  } else if ((DMIN < controle_v7_1_U.Distance) && (controle_v7_1_U.Distance <=
+              Dfrenage + DMIN)) {
+    Dfrenage = (controle_v7_1_U.Distance * controle_v7_1_U.Distance - DMIN*DMIN) *
+      controle_v7_1_U.Vitesse_Consigne / ((Dfrenage + DMIN) * (Dfrenage + DMIN));
   } else {
     Dfrenage = controle_v7_1_U.Vitesse_Consigne;
   }
