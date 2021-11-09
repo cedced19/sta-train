@@ -1,0 +1,13 @@
+.controle_v60,
+.controle_v61,
+.controle_v62,
+.controle_v63,
+.controle_v64,
+.controle_v65 { background-image: url('controle_v6_icons.png'); width: 16px; height: 16px; }
+
+.controle_v60 { background-position: -0px; }
+.controle_v61 { background-position: -16px; }
+.controle_v62 { background-position: -32px; }
+.controle_v63 { background-position: -48px; }
+.controle_v64 { background-position: -64px; }
+.controle_v65 { background-position: -80px; }

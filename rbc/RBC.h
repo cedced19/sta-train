@@ -12,6 +12,7 @@ typedef struct train {
 	int sock;
 	int speedMeasured;
 	int order;
+	int initialized;
 	struct train *nextTrain;
 } Train;
 

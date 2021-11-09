@@ -402,8 +402,8 @@ int main(int argc, char *argv[])
 										sleep(1);
 									}
 									printf("One balise located\n");
-									WriteVitesseConsigne(0,1);
-									sendData(sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
+									WriteVitesseConsigne(8,1);
+									sendData(sock, 3, train1.id, (int)train1.position, 8);
 								} else {
 									printf("Nothing to do\n");
 									WriteVitesseConsigne(0,1);
