@@ -6,7 +6,9 @@
         "in.h": "c",
         "controlador.h": "c",
         "rtwtypes.h": "c",
-        "rbc.h": "c"
+        "rbc.h": "c",
+        "rtw_solver.h": "c",
+        "controle_v7_1.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

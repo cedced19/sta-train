@@ -7,7 +7,7 @@ all: RBC
 
 
 RBC:
-	$(CC) RBC.c controller/*.c -o RBC.exe $(LFLAGS) $(FLAGS)
+	$(CC)  RBC.c controller_1/*.c controller_2/*.c -o RBC.exe $(LFLAGS) $(FLAGS)
 
 test: RBC
 	./RBC.exe $(RBC_PORT)

@@ -13,16 +13,25 @@
 
 #define MAXLEN 500
 
-// controle_v6
-#include "controller/controle_v6.h"            
-#include "controller/rtwtypes.h"
+
+#include "rtw/rtw_continuous.h"
+#include "rtw/rtw_solver.h"
+#include "rtwtypes.h"
+
+
+#include "controller_1/controle_v7_1.h"      
+#include "controller_2/controle_v7_2.h"   
+
+
+
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
 
 struct timeval lastCall;
 struct timeval currentCall;
 
-void onestep(Train *train);
+void onestep_1(Train *train);
+void onestep_2(Train *train);
 
 Train *trainsList=NULL;
 
@@ -38,27 +47,38 @@ void periodSending(int signo) {
     Train* train = trainsList;
     //showTrains(train);
 	while(train != NULL) {
-        if (train->pos != -1) {
+        if (train->pos != -1 && train->id != 0) {
             if (train->initialized == 0) {
                 printf("Initializing\n");
-                controle_v6_initialize();
+                if (train->id == 1) {
+                    controle_v7_1_initialize();
+                }
+                if (train->id == 2) {
+                    controle_v7_2_initialize();
+                }
                 train->initialized = 1;
             }
-            onestep(train);
+            if (train->id == 1) {
+                onestep_1(train);
+            }
+            if (train->id == 2) {
+                onestep_2(train);
+            }
+            
             sendData(train->sock, 6, train->id, train->pos, train->speed);
         }
         train = train->nextTrain;
     }
 } 
 
-void onestep(Train *train)
+void onestep_1(Train *train)
 {
   static boolean_T OverrunFlag = false;
   gettimeofday(&currentCall, NULL);
   // time between last call
   printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
 
-  printf("\nonestep begin\n");
+  printf("\nonestep_1 begin\n");
   printf("Current train id: %d\n", train->id);
 
   
@@ -67,7 +87,7 @@ void onestep(Train *train)
 
   /* Check for overrun */
   if (OverrunFlag) {
-    rtmSetErrorStatus(controle_v6_M, "Overrun");
+    rtmSetErrorStatus(controle_v7_1_M, "Overrun");
     return;
   }
 
@@ -78,29 +98,27 @@ void onestep(Train *train)
   /* Set model inputs here */
   //if(train->order > )
   //train->pos-selectTrainByOrder()
-  controle_v6_U.Position = train->pos+200;
-  controle_v6_U.Position_2 = train->pos;
-  controle_v6_U.Vitesse_Consigne = 40;
-  controle_v6_U.Vitesse_Reelle = train->speedMeasured;
-  controle_v6_U.Light = 0;
+  controle_v7_1_U.Distance = 200;
+  controle_v7_1_U.Vitesse_Consigne = 20;
+  controle_v7_1_U.Vitesse_Reelle = train->speedMeasured;
+  controle_v7_1_U.Light = 0;
 
   // Log all inputs
-  printf("Postion 1 %f\n", controle_v6_U.Position);
-  printf("Postion 2 %f\n", controle_v6_U.Position_2);
-  printf("Vitesse Consigne (Input) %f\n", controle_v6_U.Vitesse_Consigne);
-  printf("Vitesse Reelle %f\n", controle_v6_U.Vitesse_Reelle);
-  printf("Light %f\n", controle_v6_U.Light);
+  printf("Distance %f\n", controle_v7_1_U.Distance);
+  printf("Vitesse Consigne (Input) %f\n", controle_v7_1_U.Vitesse_Consigne);
+  printf("Vitesse Reelle %f\n", controle_v7_1_U.Vitesse_Reelle);
+  printf("Light %f\n", controle_v7_1_U.Light);
 
   /* Step the model for base rate */
-  controle_v6_step();
+  controle_v7_1_step();
 
   
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne (Output) %d\n", (int) controle_v6_Y.Vitesse_Envoyee);
+  printf("Vitesse consigne (Output) %d\n", (int) controle_v7_1_Y.Vitesse_Envoyee);
 
-  train->speed = (int)  controle_v6_Y.Vitesse_Envoyee;
+  train->speed = (int)  controle_v7_1_Y.Vitesse_Envoyee;
 
   /* Indicate task complete */
   OverrunFlag = false;
@@ -110,6 +128,64 @@ void onestep(Train *train)
 
   gettimeofday(&lastCall, NULL);
   printf("\nDuration of onestep: %0.8f\n", time_diff(&currentCall, &lastCall));
+
+  /* Disable interrupts here */
+  /* Restore FPU context here (if necessary) */
+  /* Enable interrupts here */
+}
+
+void onestep_2(Train *train)
+{
+  static boolean_T OverrunFlag = false;
+  // time between last call
+
+  printf("\nonestep_2 begin\n");
+  printf("Current train id: %d\n", train->id);
+
+  
+
+  /* Disable interrupts here */
+
+  /* Check for overrun */
+  if (OverrunFlag) {
+    rtmSetErrorStatus(controle_v7_2_M, "Overrun");
+    return;
+  }
+
+  OverrunFlag = true;
+
+  /* Save FPU context here (if necessary) */
+  /* Re-enable timer or interrupt here */
+  /* Set model inputs here */
+  //if(train->order > )
+  //train->pos-selectTrainByOrder()
+  controle_v7_2_U.Distance = 200;
+  controle_v7_2_U.Vitesse_Consigne = 20;
+  controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
+  controle_v7_2_U.Light = 0;
+
+  // Log all inputs
+  printf("Distance %f\n", controle_v7_2_U.Distance);
+  printf("Vitesse Consigne (Input) %f\n", controle_v7_2_U.Vitesse_Consigne);
+  printf("Vitesse Reelle %f\n", controle_v7_2_U.Vitesse_Reelle);
+  printf("Light %f\n", controle_v7_2_U.Light);
+
+  /* Step the model for base rate */
+  controle_v7_2_step();
+
+  
+
+  /* Get model outputs here */
+  // Log all outputs here
+  printf("Vitesse consigne (Output) %d\n", (int) controle_v7_2_Y.Vitesse_Envoyee);
+
+  train->speed = (int)  controle_v7_2_Y.Vitesse_Envoyee;
+
+  /* Indicate task complete */
+  OverrunFlag = false;
+
+
+  printf("\nonestep end\n");
 
   /* Disable interrupts here */
   /* Restore FPU context here (if necessary) */
@@ -162,7 +238,7 @@ void* connection_handler(void *socket_desc){
                                 trainsList = addTrain(id, pos, speed, sock, trainsList);
                                 // pthread_mutex_lock(&mutex);
                                 // printf("in mutex\n");
-                                orderTrain(trainsList);
+                                orderTrain2(trainsList);
                                 // pthread_mutex_unlock(&mutex);
                                 //printf("after order train");
                             }
@@ -176,7 +252,7 @@ void* connection_handler(void *socket_desc){
                             {
                                 trainsList =  addTrain(id, pos, speed, sock, trainsList); 
                                 // pthread_mutex_lock(&mutex);
-                                orderTrain(trainsList);
+                                orderTrain2(trainsList);
                                 // pthread_mutex_unlock(&mutex);
                                 train = trainsList;
                             }
@@ -429,5 +505,6 @@ int main(int argc, char *argv[])
         pthread_detach(thread);
         puts("New connection assigned to handler");
     }
-    controle_v6_terminate();
+    controle_v7_1_terminate();
+    controle_v7_2_terminate();
 }
