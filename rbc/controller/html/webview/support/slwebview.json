@@ -1,0 +1,26 @@
+{
+ "baseUrl":"support/slwebview_files",
+ "homeHid":1,
+ "initialElement":"",
+ "sections":[
+  {
+   "hid":1,
+   "sid":"controle_v4",
+   "name":"controle_v4",
+   "fullname":"controle_v4",
+   "label":"controle_v4*",
+   "parent":0,
+   "descendants":[
+    2
+   ],
+   "hierarchyUrl":"support/slwebview_files/controle_v4_h_1.json",
+   "backingUrl":"support/slwebview_files/controle_v4_m.json"
+  }
+ ],
+ "optViews":[
+ ],
+ "display":{
+  "informer":false
+ },
+ "iconsUrl":"support/slwebview_files/controle_v4_icons.css"
+}

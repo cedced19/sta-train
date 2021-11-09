@@ -5,11 +5,11 @@
  *
  * File: rtwtypes.h
  *
- * Code generated for Simulink model 'controle_v3'.
+ * Code generated for Simulink model 'controle_v4'.
  *
- * Model version                  : 2.1
+ * Model version                  : 2.6
  * Simulink Coder version         : 9.5 (R2021a) 14-Nov-2020
- * C/C++ source code generated on : Mon Nov  8 11:19:10 2021
+ * C/C++ source code generated on : Mon Nov  8 21:46:26 2021
  *
  * Target selection: ert.tlc
  * Embedded hardware selection: Intel->x86-64 (Linux 64)

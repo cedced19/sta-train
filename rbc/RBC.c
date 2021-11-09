@@ -13,8 +13,8 @@
 
 #define MAXLEN 500
 
-// controle_v3
-#include "controller/controle_v3.h"            
+// controle_v4
+#include "controller/controle_v4.h"            
 #include "controller/rtwtypes.h"
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
@@ -42,7 +42,7 @@ void periodSending(int signo) {
         if (train->pos != -1) {
             if (initialized == 0) {
                 printf("Initializing\n");
-                controle_v3_initialize();
+                controle_v4_initialize();
                 initialized = 1;
             }
             onestep(trainsList);
@@ -67,7 +67,7 @@ void onestep(Train *train)
 
   /* Check for overrun */
   if (OverrunFlag) {
-    rtmSetErrorStatus(controle_v3_M, "Overrun");
+    rtmSetErrorStatus(controle_v4_M, "Overrun");
     return;
   }
 
@@ -76,29 +76,29 @@ void onestep(Train *train)
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
-  controle_v3_U.Position = (double) train->pos+20000;
-  controle_v3_U.Position_2 = (double) train->pos;
-  controle_v3_U.Vitesse_Consigne = (double) 40;
-  controle_v3_U.Vitesse_Reelle = (double) train->speedMeasured;
-  controle_v3_U.Light = (double) 1;
+  controle_v4_U.Position = train->pos+200;
+  controle_v4_U.Position_2 = train->pos;
+  controle_v4_U.Vitesse_Consigne = 40;
+  controle_v4_U.Vitesse_Reelle = train->speedMeasured;
+  controle_v4_U.Light = 0;
 
   // Log all inputs
-  printf("Postion 1 %f\n", controle_v3_U.Position);
-  printf("Postion 2 %f\n", controle_v3_U.Position_2);
-  printf("Vitesse Consigne (Input) %f\n", controle_v3_U.Vitesse_Consigne);
-  printf("Vitesse Reelle %f\n", controle_v3_U.Vitesse_Reelle);
-  printf("Light %f\n", controle_v3_U.Light);
+  printf("Postion 1 %f\n", controle_v4_U.Position);
+  printf("Postion 2 %f\n", controle_v4_U.Position_2);
+  printf("Vitesse Consigne (Input) %f\n", controle_v4_U.Vitesse_Consigne);
+  printf("Vitesse Reelle %f\n", controle_v4_U.Vitesse_Reelle);
+  printf("Light %f\n", controle_v4_U.Light);
 
   /* Step the model for base rate */
-  controle_v3_step();
+  controle_v4_step();
 
   
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne (Output) %d\n", (int) controle_v3_Y.Vitesse_Envoyee);
+  printf("Vitesse consigne (Output) %d\n", (int) controle_v4_Y.Vitesse_Envoyee);
 
-  train->speed = (int) controle_v3_Y.Vitesse_Envoyee;
+  train->speed = (int) controle_v4_Y.Vitesse_Envoyee;
 
   /* Indicate task complete */
   OverrunFlag = false;
@@ -126,16 +126,15 @@ void * orderTrain2(Train * trains){
 void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
     char message[MAXLEN];
-    int read_size;
     T_list list = NULL;
     int code;
     int id;
     int pos;
     int speed;
-
+    int read;
 
     do {
-            int read = read_size = recv(sock , message , MAXLEN , 0);
+            read = recv(sock , message , MAXLEN , 0);
             if (read < 0) {
                     perror("Reading stream message");
             } else if (read == 0) {
@@ -428,5 +427,5 @@ int main(int argc, char *argv[])
         pthread_detach(thread);
         puts("New connection assigned to handler");
     }
-    controle_v3_terminate();
+    controle_v4_terminate();
 }
