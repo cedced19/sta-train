@@ -13,8 +13,8 @@
 
 #define MAXLEN 500
 
-// controle_v4
-#include "controller/controle_v4.h"            
+// controle_v6
+#include "controller/controle_v6.h"            
 #include "controller/rtwtypes.h"
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
@@ -35,19 +35,19 @@ float time_diff(struct timeval *start, struct timeval *end) {
 /// SIGALARM
 ///////////////////////////////////////////
 void periodSending(int signo) {
-    Train* train = selectTrain(1,trainsList);
-    static int initialized = 0;
+    Train* train = trainsList;
     //showTrains(train);
-	if (train != NULL) {
+	while(train != NULL) {
         if (train->pos != -1) {
-            if (initialized == 0) {
+            if (train->initialized == 0) {
                 printf("Initializing\n");
-                controle_v4_initialize();
-                initialized = 1;
+                controle_v6_initialize();
+                train->initialized = 1;
             }
-            onestep(trainsList);
-            sendData(trainsList->sock, 6, trainsList->id, trainsList->pos, trainsList->speed);
+            onestep(train);
+            sendData(train->sock, 6, train->id, train->pos, train->speed);
         }
+        train = train->nextTrain;
     }
 } 
 
@@ -67,7 +67,7 @@ void onestep(Train *train)
 
   /* Check for overrun */
   if (OverrunFlag) {
-    rtmSetErrorStatus(controle_v4_M, "Overrun");
+    rtmSetErrorStatus(controle_v6_M, "Overrun");
     return;
   }
 
@@ -76,29 +76,31 @@ void onestep(Train *train)
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
-  controle_v4_U.Position = train->pos+200;
-  controle_v4_U.Position_2 = train->pos;
-  controle_v4_U.Vitesse_Consigne = 40;
-  controle_v4_U.Vitesse_Reelle = train->speedMeasured;
-  controle_v4_U.Light = 0;
+  //if(train->order > )
+  //train->pos-selectTrainByOrder()
+  controle_v6_U.Position = train->pos+200;
+  controle_v6_U.Position_2 = train->pos;
+  controle_v6_U.Vitesse_Consigne = 40;
+  controle_v6_U.Vitesse_Reelle = train->speedMeasured;
+  controle_v6_U.Light = 0;
 
   // Log all inputs
-  printf("Postion 1 %f\n", controle_v4_U.Position);
-  printf("Postion 2 %f\n", controle_v4_U.Position_2);
-  printf("Vitesse Consigne (Input) %f\n", controle_v4_U.Vitesse_Consigne);
-  printf("Vitesse Reelle %f\n", controle_v4_U.Vitesse_Reelle);
-  printf("Light %f\n", controle_v4_U.Light);
+  printf("Postion 1 %f\n", controle_v6_U.Position);
+  printf("Postion 2 %f\n", controle_v6_U.Position_2);
+  printf("Vitesse Consigne (Input) %f\n", controle_v6_U.Vitesse_Consigne);
+  printf("Vitesse Reelle %f\n", controle_v6_U.Vitesse_Reelle);
+  printf("Light %f\n", controle_v6_U.Light);
 
   /* Step the model for base rate */
-  controle_v4_step();
+  controle_v6_step();
 
   
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne (Output) %d\n", (int) controle_v4_Y.Vitesse_Envoyee);
+  printf("Vitesse consigne (Output) %d\n", (int) controle_v6_Y.Vitesse_Envoyee);
 
-  train->speed = (int) controle_v4_Y.Vitesse_Envoyee;
+  train->speed = (int)  controle_v6_Y.Vitesse_Envoyee;
 
   /* Indicate task complete */
   OverrunFlag = false;
@@ -427,5 +429,5 @@ int main(int argc, char *argv[])
         pthread_detach(thread);
         puts("New connection assigned to handler");
     }
-    controle_v4_terminate();
+    controle_v6_terminate();
 }

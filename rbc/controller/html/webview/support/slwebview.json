@@ -5,16 +5,16 @@
  "sections":[
   {
    "hid":1,
-   "sid":"controle_v4",
-   "name":"controle_v4",
-   "fullname":"controle_v4",
-   "label":"controle_v4*",
+   "sid":"controle_v6",
+   "name":"controle_v6",
+   "fullname":"controle_v6",
+   "label":"controle_v6",
    "parent":0,
    "descendants":[
     2
    ],
-   "hierarchyUrl":"support/slwebview_files/controle_v4_h_1.json",
-   "backingUrl":"support/slwebview_files/controle_v4_m.json"
+   "hierarchyUrl":"support/slwebview_files/controle_v6_h_1.json",
+   "backingUrl":"support/slwebview_files/controle_v6_m.json"
   }
  ],
  "optViews":[
@@ -22,5 +22,5 @@
  "display":{
   "informer":false
  },
- "iconsUrl":"support/slwebview_files/controle_v4_icons.css"
+ "iconsUrl":"support/slwebview_files/controle_v6_icons.css"
 }

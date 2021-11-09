@@ -1,0 +1,558 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><link rel="stylesheet" type="text/css" href="rtwreport.css" /><script language="JavaScript" type="text/javascript">function rtwTableShrink(o) {var t = o.nextSibling;if (t.nodeType != 1) {t = t.nextSibling;}if (t.style.display == "none") {t.style.display = "";o.innerHTML = "[-]"} else {t.style.display = "none";o.innerHTML = "[+] ... "}}</script><script language="JavaScript" type="text/javascript" src="rtwreport_utils.js"></script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>
+Code Interface Report for controle_v6
+</title>
+
+</head>
+<body ONLOAD="try {if (top) {if (top.rtwPageOnLoad) top.rtwPageOnLoad('rtwIdCodeInterface'); else local_onload();}} catch(err) {};">
+<h1>
+Code Interface Report for controle_v6
+</h1>
+<h3>
+Table of Contents
+</h3>
+<ul>
+<li>
+<a href="#sec_Entry-Point_Functions">
+Entry-Point Functions
+</a>
+
+</li>
+<li>
+<a href="#sec_Inports">
+Inports
+</a>
+
+</li>
+<li>
+<a href="#sec_Outports">
+Outports
+</a>
+
+</li>
+<li>
+<a href="#sec_Interface_Parameters">
+Interface Parameters
+</a>
+
+</li>
+<li>
+<a href="#sec_Data_Stores">
+Data Stores
+</a>
+
+</li>
+
+</ul>
+<h3>
+<a name="sec_Entry-Point_Functions">
+Entry-Point Functions
+</a>
+
+</h3>
+<p>
+Function: <a href="controle_v6_c.html#fcn_controle_v6_initialize">controle_v6_initialize</a>
+</p>
+<table width="100%" class="AltRow" cellspacing="0">
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Prototype
+</td>
+<td width="75%" align="left" valign="top">
+<b>
+void controle_v6_initialize(void)
+</b>
+
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Description
+</td>
+<td width="75%" align="left" valign="top">
+Initialization entry point of generated code
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Timing
+</td>
+<td width="75%" align="left" valign="top">
+Must be called exactly once
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Arguments
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Return value
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Header file
+</td>
+<td width="75%" align="left" valign="top">
+<a href="controle_v6_h.html">controle_v6.h</a>
+</td>
+
+</tr>
+
+</table>
+<p>
+Function: <a href="controle_v6_c.html#fcn_controle_v6_step">controle_v6_step</a>
+</p>
+<table width="100%" class="AltRow" cellspacing="0">
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Prototype
+</td>
+<td width="75%" align="left" valign="top">
+<b>
+void controle_v6_step(void)
+</b>
+
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Description
+</td>
+<td width="75%" align="left" valign="top">
+Output entry point of generated code
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Timing
+</td>
+<td width="75%" align="left" valign="top">
+Must be called periodically, every 0.034 seconds
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Arguments
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Return value
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Header file
+</td>
+<td width="75%" align="left" valign="top">
+<a href="controle_v6_h.html">controle_v6.h</a>
+</td>
+
+</tr>
+
+</table>
+<p>
+Function: <a href="controle_v6_c.html#fcn_controle_v6_terminate">controle_v6_terminate</a>
+</p>
+<table width="100%" class="AltRow" cellspacing="0">
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Prototype
+</td>
+<td width="75%" align="left" valign="top">
+<b>
+void controle_v6_terminate(void)
+</b>
+
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Description
+</td>
+<td width="75%" align="left" valign="top">
+Termination entry point of generated code
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Timing
+</td>
+<td width="75%" align="left" valign="top">
+Must be called exactly once
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Arguments
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="even">
+<td width="25%" align="left" valign="top">
+Return value
+</td>
+<td width="75%" align="left" valign="top">
+None
+</td>
+
+</tr>
+<tr class="odd">
+<td width="25%" align="left" valign="top">
+Header file
+</td>
+<td width="75%" align="left" valign="top">
+<a href="controle_v6_h.html">controle_v6.h</a>
+</td>
+
+</tr>
+
+</table>
+<h3>
+<a name="sec_Inports">
+Inports
+</a>
+
+</h3>
+<span title="Click to shrink or expand table" onclick="rtwTableShrink(this)">[-]</span><table width="100%" class="AltRow FirstColumn" cellspacing="0">
+<tr class="heading">
+<th width="42%" align="left" valign="top">
+<b>
+Block Name
+</b>
+
+</th>
+<th width="26%" align="left" valign="top">
+<b>
+Code Identifier
+</b>
+
+</th>
+<th width="21%" align="left" valign="top">
+<b>
+Data Type
+</b>
+
+</th>
+<th width="10%" align="right" valign="top">
+<b>
+Dimension
+</b>
+
+</th>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Vitesse_Consigne
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_U.Vitesse_Consigne
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="odd">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Light
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_U.Light
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Position 
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_U.Position
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="odd">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Position_2
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_U.Position_2
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Vitesse_Reelle
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_U.Vitesse_Reelle
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+
+</table>
+<h3>
+<a name="sec_Outports">
+Outports
+</a>
+
+</h3>
+<table width="100%" class="AltRow FirstColumn" cellspacing="0">
+<tr class="heading">
+<th width="42%" align="left" valign="top">
+<b>
+Block Name
+</b>
+
+</th>
+<th width="26%" align="left" valign="top">
+<b>
+Code Identifier
+</b>
+
+</th>
+<th width="21%" align="left" valign="top">
+<b>
+Data Type
+</b>
+
+</th>
+<th width="10%" align="right" valign="top">
+<b>
+Dimension
+</b>
+
+</th>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Vitesse_Envoyee
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_Y.Vitesse_Envoyee
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+
+</table>
+<h3>
+<a name="sec_Interface_Parameters">
+Interface Parameters
+</a>
+
+</h3>
+<span title="Click to shrink or expand table" onclick="rtwTableShrink(this)">[-]</span><table width="100%" class="AltRow FirstColumn" cellspacing="0">
+<tr class="heading">
+<th width="42%" align="left" valign="top">
+<b>
+Parameter Source
+</b>
+
+</th>
+<th width="26%" align="left" valign="top">
+<b>
+Code Identifier
+</b>
+
+</th>
+<th width="21%" align="left" valign="top">
+<b>
+Data Type
+</b>
+
+</th>
+<th width="10%" align="right" valign="top">
+<b>
+Dimension
+</b>
+
+</th>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+C
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.C
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="odd">
+<td width="42%" align="left" valign="top">
+Ki
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Ki
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+Ks
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Ks
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="odd">
+<td width="42%" align="left" valign="top">
+Kx
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Kx
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Integrator
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Integrator_IC
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="odd">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Saturation
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Saturation_UpperSat
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+<tr class="even">
+<td width="42%" align="left" valign="top">
+&lt;Root&gt;/Saturation
+</td>
+<td width="26%" align="left" valign="top">
+controle_v6_P.Saturation_LowerSat
+</td>
+<td width="21%" align="left" valign="top">
+real_T
+</td>
+<td width="10%" align="right" valign="top">
+1
+</td>
+
+</tr>
+
+</table>
+<h3>
+<a name="sec_Data_Stores">
+Data Stores
+</a>
+
+</h3>
+<p>
+No data stores in the model; note that this report lists only data stores with non-auto storage class and global data stores
+</p>
+
+</body>
+
+</html>

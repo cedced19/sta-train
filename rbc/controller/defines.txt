@@ -1,4 +1,4 @@
-MODEL=controle_v4
+MODEL=controle_v6
 NUMST=2
 NCSTATES=1
 HAVESTDIO
