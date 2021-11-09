@@ -98,8 +98,15 @@ void onestep_1(Train *train)
   /* Set model inputs here */
   //if(train->order > )
   //train->pos-selectTrainByOrder()
-  controle_v7_1_U.Distance = 200;
-  controle_v7_1_U.Vitesse_Consigne = 20;
+
+  int defaultDistance = 3000;
+  Train* train2 = selectTrain(2,trainsList);
+  if (train2 != NULL) {
+      defaultDistance = 3000;
+  } 
+
+  controle_v7_1_U.Distance = defaultDistance;
+  controle_v7_1_U.Vitesse_Consigne = 25;
   controle_v7_1_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_1_U.Light = 0;
 
@@ -157,10 +164,15 @@ void onestep_2(Train *train)
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
-  //if(train->order > )
-  //train->pos-selectTrainByOrder()
-  controle_v7_2_U.Distance = 200;
-  controle_v7_2_U.Vitesse_Consigne = 20;
+  
+  int defaultDistance = 3000;
+  Train* train1 = selectTrain(1,trainsList);
+  if (train1 != NULL) {
+      defaultDistance = abs(train1->pos-train->pos)%(17354);
+  } 
+
+  controle_v7_2_U.Distance = defaultDistance;
+  controle_v7_2_U.Vitesse_Consigne = 25;
   controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_2_U.Light = 0;
 
