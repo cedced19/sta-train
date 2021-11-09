@@ -226,17 +226,29 @@ T_list splitMessages(T_list list, char data[]) {
 T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;
 		char delim[] = SEPARATOR;
-		ptr = strtok(list->data, delim);
-		*code = atoi(ptr);
-		ptr = strtok(NULL, delim);
-		*id = atoi(ptr);
-		ptr = strtok(NULL, delim);
-		*position = atoi(ptr);
-		ptr = strtok(NULL, MESSAGE_END);
-		*speed = atoi(ptr);	
-		list = removeFirstNode(list);
-		return list;
+		if ((ptr = strtok(list->data, delim))) {
+			*code = atoi(ptr);
+		} else {
+			*code = -1;
+		}
+		if ((ptr = strtok(NULL, delim))){
+			*id = atoi(ptr);
+		} else{
+			*id = -1;
+		}
+		if ((ptr = strtok(NULL, delim))) {
+			*position = atoi(ptr);
+		} else {
+			*position = -1;
+		}
+		if ((ptr = strtok(NULL, MESSAGE_END))) {
+			*speed = atoi(ptr);
+		} else {
+			*speed = -1;
+		}
+		return removeFirstNode(list);
 }
+
 
 
 float timeDiff(struct timeval *start, struct timeval *end) {

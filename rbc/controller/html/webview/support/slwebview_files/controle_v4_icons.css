@@ -1,0 +1,13 @@
+.controle_v40,
+.controle_v41,
+.controle_v42,
+.controle_v43,
+.controle_v44,
+.controle_v45 { background-image: url('controle_v4_icons.png'); width: 16px; height: 16px; }
+
+.controle_v40 { background-position: -0px; }
+.controle_v41 { background-position: -16px; }
+.controle_v42 { background-position: -32px; }
+.controle_v43 { background-position: -48px; }
+.controle_v44 { background-position: -64px; }
+.controle_v45 { background-position: -80px; }
