@@ -10,6 +10,7 @@ typedef struct train {
 	int pos;
 	int speed;
 	int sock;
+	int speedConsigne;
 	int speedMeasured;
 	int order;
 	int initialized;

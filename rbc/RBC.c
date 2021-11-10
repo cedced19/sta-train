@@ -46,7 +46,7 @@ void sendDisplay(int code, int id, int pos, int speed, Train* train) {
     gettimeofday(&now, NULL);
     if(isconnected_display){
         
-        if (time_diff(&(train->lastDisplay), &now)>0.2) {
+        if (time_diff(&(train->lastDisplay), &now)>0.02) {
             sendData(socket_display, code, id, pos, speed);
             printf("Send display after %0.5f\n", time_diff(&(train->lastDisplay), &now));
             gettimeofday(&(train->lastDisplay), NULL);
@@ -143,6 +143,12 @@ void onestep_1(Train *train)
 
   OverrunFlag = true;
 
+
+  int defaultConsigne = 20;
+  if (train->speedConsigne !=0) {
+      defaultConsigne = train->speedConsigne;
+  }
+
   /* Save FPU context here (if necessary) */
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
@@ -150,14 +156,22 @@ void onestep_1(Train *train)
   //train->pos-selectTrainByOrder()
 
   int defaultDistance = 4000;
-
+  int otherTrainsId[2] = {2,3};
+  for(int i = 0; i < 2; ++i) {
+      Train* trainref = selectTrain(otherTrainsId[i],trainsList);
+      if (trainref != NULL) {
+          defaultDistance=trainref->pos-train->pos;
+          if(defaultDistance<0) defaultDistance+=DISTTOUR;
+          break;
+      } 
+  }
     /*if(train->order>1){
         Train *trainPrec=selectTrainByOrder(train->order - 1, trainsList);
         defaultDistance = calcDistance(trainPrec, train);
     }*/
 
   controle_v7_1_U.Distance = defaultDistance;
-  controle_v7_1_U.Vitesse_Consigne = 20;
+  controle_v7_1_U.Vitesse_Consigne = defaultConsigne;
   controle_v7_1_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_1_U.Light = 0;
   
@@ -219,7 +233,10 @@ void onestep_2(Train *train)
     /* Save FPU context here (if necessary) */
     /* Re-enable timer or interrupt here */
     /* Set model inputs here */
-    
+    int defaultConsigne = 35;
+    if (train->speedConsigne!=0) {
+        defaultConsigne = train->speedConsigne;
+    }
 
     int defaultDistance = 4000;
     /*if(train->order>1){
@@ -238,7 +255,7 @@ void onestep_2(Train *train)
     }
 
     controle_v7_2_U.Distance = defaultDistance;
-    controle_v7_2_U.Vitesse_Consigne = 35;
+    controle_v7_2_U.Vitesse_Consigne = defaultConsigne;
     controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
     controle_v7_2_U.Light = 0;
 
@@ -291,6 +308,7 @@ void* connection_handler(void *socket_desc){
     int pos;
     int speed;
     int read;
+    Train * selected = NULL;
 
     do {
             read = recv(sock , message , MAXLEN , 0);
@@ -308,9 +326,19 @@ void* connection_handler(void *socket_desc){
                 {
                     list = parseMessage(list, &code, &id, &pos, &speed);
                     if (id==-1) {
+                        printf("GUI\n");
                         isconnected_display=1;
                         //printf("%d\n", isconnected_display);
                         socket_display=sock;
+                        // Here pos represent which train we whant to affect the speed consigne
+                        if (pos != -1 && code == 10) {
+                            selected = selectTrain(pos, trainsList);
+                            if (selected != NULL) {
+                                selected->speedConsigne = speed;
+                                printf("Speed consigne from train %d changed to %d.\n", pos, speed);
+                            }
+                            
+                        }
                         continue; // the display do not send any messages
                     }
                    
@@ -363,7 +391,7 @@ void* connection_handler(void *socket_desc){
                         default:
                             break;
                     }
-                    showTrains(trainsList);
+                    //showTrains(trainsList);
                     // list = removeFirstNode(list);
                     // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
                     //sendData(sock, 6, id, -1, 40);
@@ -388,6 +416,7 @@ static Train * newTrain(int id, int pos, int speed, int sock) {
     train->initText = 1;
     train->sock = sock;
 	train->nextTrain = NULL;
+    train->speedConsigne = 0;
     gettimeofday(&train->lastDisplay, NULL);
 	return train;
 }
