@@ -28,3 +28,4 @@ float calcSpeed(Train *train, Train * trainsList);
 void * orderTrain(Train * trains);
 int calcMinDistance(int id_train, Train * trainsList);
 int calcDistance(Train *train1, Train *train2);
+Train * selectTrainByOrder (int orderTrain, Train *trains);

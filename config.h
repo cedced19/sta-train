@@ -5,7 +5,7 @@
 #define MESSAGE_END "$$"
 #define MAX_MSG_SIZE 256
 
-#define PORT_NUMBER 4244
+#define PORT_NUMBER 4242
 #define MAX_REQUEST 5
 #define DISTTOUR 17444
 
@@ -230,6 +230,7 @@ T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) 
 		if ((ptr = strtok(list->data, delim))) {
 			*code = atoi(ptr);
 		} else {
+			*id = -1;
 			*code = -1;
 		}
 		if ((ptr = strtok(NULL, delim))){
@@ -240,11 +241,13 @@ T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) 
 		if ((ptr = strtok(NULL, delim))) {
 			*position = atoi(ptr);
 		} else {
+			*id = -1;
 			*position = -1;
 		}
 		if ((ptr = strtok(NULL, MESSAGE_END))) {
 			*speed = atoi(ptr);
 		} else {
+			*id = -1;
 			*speed = -1;
 		}
 		return removeFirstNode(list);
