@@ -218,12 +218,17 @@ void onestep_2(Train *train)
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
   
+  int otherTrainsId[2] = {1,3};
   int defaultDistance = 4000;
-  Train* train1 = selectTrain(1,trainsList);
-  if (train1 != NULL) {
-      defaultDistance=train1->pos-train->pos;
-      if(defaultDistance<0) defaultDistance+=DISTTOUR;
-  } 
+  for(int i = 0; i < 2; ++i) {
+    Train* trainref = selectTrain(otherTrainsId[i],trainsList);
+    if (trainref != NULL) {
+        defaultDistance=trainref->pos-train->pos;
+        if(defaultDistance<0) defaultDistance+=DISTTOUR;
+        break;
+    } 
+  }
+  
 
   controle_v7_2_U.Distance = defaultDistance;
   controle_v7_2_U.Vitesse_Consigne = 35;
