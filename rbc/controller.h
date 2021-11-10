@@ -1,1 +1,1 @@
-#define DMIN 2000.0
+#define DMIN 1900.0
