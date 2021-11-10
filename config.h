@@ -125,6 +125,7 @@ char * intToString(int node) {
 	return buffer; 
 }
 
+
 int sendData(int socket, int code, int id, int position, int speed) {
 	char data[MAX_MSG_SIZE] = "";
     strcat(data, intToString(code));
@@ -140,7 +141,7 @@ int sendData(int socket, int code, int id, int position, int speed) {
         perror("Error writing message to socket");
         return 0;
     } else {
-        printf("Sending the following message : %s\n", data);
+        //printf("Sending the following message : %s\n", data);
         return 1;
     }
     return 0;
@@ -224,28 +225,32 @@ T_list splitMessages(T_list list, char data[]) {
 T_list parseMessage(T_list list, int* code, int* id, int* position, int* speed) {
 		char *ptr;
 		char delim[] = SEPARATOR;
-		if((ptr = strtok(list->data, delim))){
-		*code = atoi(ptr);}
-		else{
+		if ((ptr = strtok(list->data, delim))) {
+			*code = atoi(ptr);
+		} else {
+			*id = -1;
 			*code = -1;
 		}
-		if((ptr = strtok(NULL, delim))){
-		*id = atoi(ptr);}
-		else{
+		if ((ptr = strtok(NULL, delim))){
+			*id = atoi(ptr);
+		} else{
 			*id = -1;
 		}
-		if((ptr = strtok(NULL, delim))){
-		*position = atoi(ptr);}
-		else{
+		if ((ptr = strtok(NULL, delim))) {
+			*position = atoi(ptr);
+		} else {
+			*id = -1;
 			*position = -1;
 		}
-		if((ptr = strtok(NULL, MESSAGE_END))){
-		*speed = atoi(ptr);}
-		else {
+		if ((ptr = strtok(NULL, MESSAGE_END))) {
+			*speed = atoi(ptr);
+		} else {
+			*id = -1;
 			*speed = -1;
 		}
 		return removeFirstNode(list);
 }
+
 
 
 float timeDiff(struct timeval *start, struct timeval *end) {

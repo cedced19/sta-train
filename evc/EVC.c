@@ -24,6 +24,7 @@ unsigned char status, varDebug1, varDebug2;
 int periodDuration, sendingDuration;
 struct timeval startPeriod, endPeriod; 
 struct timeval startSendingPeriod, endSendingPeriod; 
+struct timeval startErrorTemp, endErrorTemp; 
 
 //////////////////////////////////////////
 /// Signal handler
@@ -37,14 +38,14 @@ void periodSending(int signo) {
     //printf("Cycle duration %d us\n",periodDuration);
 
 	sendingDuration = (endSendingPeriod.tv_sec*100000+endSendingPeriod.tv_usec)-(startSendingPeriod.tv_sec*100000+startSendingPeriod.tv_usec);
-	if (sendingDuration > 100000) { // send a messsage at least each second
+	//if (sendingDuration > 100000) { // send a messsage at least each second
 		if (train1.connected && train1.positionDone) {
 			status = sendData(train1.sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
 			if (status) {
 				startSendingPeriod=endSendingPeriod;
 			}
 		}
-	}
+	//}
 
 	startPeriod=endPeriod;
 } 
@@ -254,6 +255,10 @@ int main(int argc, char *argv[])
 
 		T_list list = NULL;
 
+		struct timeval now; 
+		struct timeval lastConsigne; 
+		gettimeofday(&lastConsigne,NULL); 
+
 		// Message parsed
 		int code;
 		int id;
@@ -312,7 +317,17 @@ int main(int argc, char *argv[])
 			// Create socket
 			sock = socket(AF_INET, SOCK_STREAM, 0);
 			if (sock == -1) {
-				perror("Impossible de se connecter");
+				stopTrain();
+				perror("Unable to create socket");
+				gettimeofday(&startErrorTemp,NULL); 
+				close(sock);
+				printf("Waiting 5s...\n");
+				while(1) {
+					gettimeofday(&endErrorTemp,NULL);
+					if (endErrorTemp.tv_sec-startErrorTemp.tv_sec > 4) {
+						break;
+					}
+				}
 				continue;
 			}
 			printf("Socket OK \n");
@@ -327,7 +342,17 @@ int main(int argc, char *argv[])
 			addr_rbc.sin_port = htons(serverPort);
 
 			if (connect(sock, (struct sockaddr*)&addr_rbc, sizeof(addr_rbc)) != 0) {
+				stopTrain();
 				perror("Unable to connect to the RBC");
+				gettimeofday(&startErrorTemp,NULL); 
+				close(sock);
+				printf("Waiting 5s...\n");
+				while(1) {
+					gettimeofday(&endErrorTemp,NULL);
+					if (endErrorTemp.tv_sec-startErrorTemp.tv_sec > 4) {
+						break;
+					}
+				}
 				continue;
 			}
 
@@ -381,8 +406,8 @@ int main(int argc, char *argv[])
 										sleep(1);
 									}
 									printf("One balise located\n");
-									WriteVitesseConsigne(0,1);
-									sendData(sock, 3, train1.id, (int)train1.position, train1.speedMeasured);
+									WriteVitesseConsigne(8,1);
+									sendData(sock, 3, train1.id, (int)train1.position, 8);
 								} else {
 									printf("Nothing to do\n");
 									WriteVitesseConsigne(0,1);
@@ -391,7 +416,10 @@ int main(int argc, char *argv[])
 							case 6:
 								printf("Speed reference %d\n", speed);
 								WriteVitesseConsigne(speed, 1);
-								sendData(sock, 5, train1.id, (int)train1.position, speed);
+								//sendData(sock, 5, train1.id, (int)train1.position, speed);
+								gettimeofday(&now,NULL); 
+								printf("%ld us \n", (now.tv_sec*100000+now.tv_usec)-(lastConsigne.tv_sec*100000+lastConsigne.tv_usec));
+								gettimeofday(&lastConsigne,NULL); 
 								break;
 							case 99:
 								stopTrain();
