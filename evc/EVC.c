@@ -255,6 +255,10 @@ int main(int argc, char *argv[])
 
 		T_list list = NULL;
 
+		struct timeval now; 
+		struct timeval lastConsigne; 
+		gettimeofday(&lastConsigne,NULL); 
+
 		// Message parsed
 		int code;
 		int id;
@@ -413,6 +417,9 @@ int main(int argc, char *argv[])
 								printf("Speed reference %d\n", speed);
 								WriteVitesseConsigne(speed, 1);
 								//sendData(sock, 5, train1.id, (int)train1.position, speed);
+								gettimeofday(&now,NULL); 
+								printf("%ld us \n", (now.tv_sec*100000+now.tv_usec)-(lastConsigne.tv_sec*100000+lastConsigne.tv_usec));
+								gettimeofday(&lastConsigne,NULL); 
 								break;
 							case 99:
 								stopTrain();
