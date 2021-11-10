@@ -46,8 +46,8 @@ void sendDisplay(int code, int id, int pos, int speed, Train* train) {
     gettimeofday(&now, NULL);
     if(isconnected_display){
         
-        if (time_diff(&(train->lastDisplay), &now)>0.5) {
-            //sendData(socket_display, code, id, pos, speed);
+        if (time_diff(&(train->lastDisplay), &now)>0.2) {
+            sendData(socket_display, code, id, pos, speed);
             printf("Send display after %0.5f\n", time_diff(&(train->lastDisplay), &now));
             gettimeofday(&(train->lastDisplay), NULL);
         }
@@ -150,16 +150,18 @@ void onestep_1(Train *train)
   //train->pos-selectTrainByOrder()
 
   int defaultDistance = 4000;
-  Train* train2 = selectTrain(2,trainsList);
-  if (train2 != NULL) {
-      defaultDistance = 4000;
-  } 
+
+    /*if(train->order>1){
+        Train *trainPrec=selectTrainByOrder(train->order - 1, trainsList);
+        defaultDistance = calcDistance(trainPrec, train);
+    }*/
 
   controle_v7_1_U.Distance = defaultDistance;
   controle_v7_1_U.Vitesse_Consigne = 20;
   controle_v7_1_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_1_U.Light = 0;
-
+  
+  printf("Distance 1->2 %f\n", controle_v7_1_U.Distance);
   // Log all inputs
   //printf("Distance %f\n", controle_v7_1_U.Distance);
   //printf("Vitesse Consigne (Input) %f\n", controle_v7_1_U.Vitesse_Consigne);
@@ -193,76 +195,81 @@ void onestep_1(Train *train)
 }
 
 void onestep_2(Train *train)
-{
-  static boolean_T OverrunFlag = false;
-  // time between last call
+    {
+    static boolean_T OverrunFlag = false;
+    // time between last call
 
-  //printf("\nonestep_2 begin\n");
-  //printf("Current train id: %d\n", train->id);
-  gettimeofday(&currentCall_2, NULL);
-  // time between last call
-  float period = time_diff(&lastCall_2, &currentCall_2);
-  
+    //printf("\nonestep_2 begin\n");
+    //printf("Current train id: %d\n", train->id);
+    gettimeofday(&currentCall_2, NULL);
+    // time between last call
+    float period = time_diff(&lastCall_2, &currentCall_2);
+    
+    
+    /* Disable interrupts here */
 
-  /* Disable interrupts here */
+    /* Check for overrun */
+    if (OverrunFlag) {
+        rtmSetErrorStatus(controle_v7_2_M, "Overrun");
+        return;
+    }
 
-  /* Check for overrun */
-  if (OverrunFlag) {
-    rtmSetErrorStatus(controle_v7_2_M, "Overrun");
-    return;
-  }
+    OverrunFlag = true;
 
-  OverrunFlag = true;
+    /* Save FPU context here (if necessary) */
+    /* Re-enable timer or interrupt here */
+    /* Set model inputs here */
+    
 
-  /* Save FPU context here (if necessary) */
-  /* Re-enable timer or interrupt here */
-  /* Set model inputs here */
-  
-  int otherTrainsId[2] = {1,3};
-  int defaultDistance = 4000;
-  for(int i = 0; i < 2; ++i) {
-    Train* trainref = selectTrain(otherTrainsId[i],trainsList);
-    if (trainref != NULL) {
-        defaultDistance=trainref->pos-train->pos;
-        if(defaultDistance<0) defaultDistance+=DISTTOUR;
-        break;
-    } 
-  }
-  
+    int defaultDistance = 4000;
+    /*if(train->order>1){
+        Train *trainPrec=selectTrainByOrder(train->order - 1, trainsList);
+        defaultDistance = calcDistance(trainPrec, train);
+    }*/
 
-  controle_v7_2_U.Distance = defaultDistance;
-  controle_v7_2_U.Vitesse_Consigne = 35;
-  controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
-  controle_v7_2_U.Light = 0;
+    int otherTrainsId[2] = {1,3};
+    for(int i = 0; i < 2; ++i) {
+        Train* trainref = selectTrain(otherTrainsId[i],trainsList);
+        if (trainref != NULL) {
+            defaultDistance=trainref->pos-train->pos;
+            if(defaultDistance<0) defaultDistance+=DISTTOUR;
+            break;
+        } 
+    }
 
-  // Log all inputs
-  printf("Distance %f\n", controle_v7_2_U.Distance);
-  //printf("Vitesse Consigne (Input) %f\n", controle_v7_2_U.Vitesse_Consigne);
-  //printf("Vitesse Reelle %f\n", controle_v7_2_U.Vitesse_Reelle);
-  //printf("Light %f\n", controle_v7_2_U.Light);
+    controle_v7_2_U.Distance = defaultDistance;
+    controle_v7_2_U.Vitesse_Consigne = 35;
+    controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
+    controle_v7_2_U.Light = 0;
 
-  /* Step the model for base rate */
-  controle_v7_2_step();
+    // Log all inputs
+    printf("Distance 2->1 %f\n", controle_v7_2_U.Distance);
+    //printf("Vitesse Consigne (Input) %f\n", controle_v7_2_U.Vitesse_Consigne);
+    //printf("Vitesse Reelle %f\n", controle_v7_2_U.Vitesse_Reelle);
+    //printf("Light %f\n", controle_v7_2_U.Light);
 
-  
+    /* Step the model for base rate */
+    controle_v7_2_step();
 
-  /* Get model outputs here */
-  // Log all outputs here
-  //printf("Vitesse consigne (Output) %d\n", (int) controle_v7_2_Y.Vitesse_Envoyee);
+    
 
-  train->speed = (int)  controle_v7_2_Y.Vitesse_Envoyee;
+    /* Get model outputs here */
+    // Log all outputs here
+    //printf("Vitesse consigne (Output) %d\n", (int) controle_v7_2_Y.Vitesse_Envoyee);
 
-  /* Indicate task complete */
-  OverrunFlag = false;
+    train->speed = (int)  controle_v7_2_Y.Vitesse_Envoyee;
+
+    /* Indicate task complete */
+    OverrunFlag = false;
 
 
-  gettimeofday(&lastCall_2, NULL);
-  //printf("\nDuration of onestep: %0.8f\n", );
+    gettimeofday(&lastCall_2, NULL);
+    //printf("\nDuration of onestep: %0.8f\n", );
 
-  /* Disable interrupts here */
-  /* Restore FPU context here (if necessary) */
-  /* Enable interrupts here */
-  writeCSV(time_diff(&currentCall_2, &lastCall_2), period, train);
+    /* Disable interrupts here */
+    /* Restore FPU context here (if necessary) */
+    /* Enable interrupts here */
+    writeCSV(time_diff(&currentCall_2, &lastCall_2), period, train);
 }
 
 void * orderTrain2(Train * trains){
@@ -356,7 +363,7 @@ void* connection_handler(void *socket_desc){
                         default:
                             break;
                     }
-                    //showTrains(trainsList);
+                    showTrains(trainsList);
                     // list = removeFirstNode(list);
                     // printf("SPEED train %d: %f \n", id, calcSpeed(selectTrain(id, trainsList), trainsList));
                     //sendData(sock, 6, id, -1, 40);
@@ -412,10 +419,12 @@ Train * selectTrain (int id_train, Train *trains) {
 } 
 
 Train * selectTrainByOrder (int orderTrain, Train *trains) {
-    while(trains!=NULL && orderTrain!=trains->order){
+    while(trains!=NULL){
+        if(trains->order == orderTrain)
+            return trains;
         trains=trains->nextTrain;
     }
-    return trains;
+    return NULL;
 } 
 
 void * storeData(int id_train, int pos, int speed, Train * trains){
@@ -469,7 +478,7 @@ int calcMinDistance(int id_train, Train * trainsList){ //fonction utilisée uniq
             if(dist<0 && -dist<distmin) {distmin=-dist; id=trainsList->id;};
             if(dist<0 && DISTTOUR+dist<distmin) {distmin=DISTTOUR+dist; id=trainsList->id;};
             if(dist==0){id=0;break;}
-        printf("calcmin %d, %d \n",trainsList->pos, dist);
+        printf("calcmin %d, %d \n",trainsList->pos, distmin);
         }
         trainsList=trainsList->nextTrain;
     }
