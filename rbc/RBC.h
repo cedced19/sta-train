@@ -14,6 +14,7 @@ typedef struct train {
 	int order;
 	int initialized;
 	int connected;
+	int initText;
 	struct train *nextTrain;
 } Train;
 

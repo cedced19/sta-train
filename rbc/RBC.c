@@ -27,8 +27,11 @@
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
 
-struct timeval lastCall;
-struct timeval currentCall;
+struct timeval lastCall_1;
+struct timeval currentCall_1;
+
+struct timeval lastCall_2;
+struct timeval currentCall_2;
 
 void onestep_1(Train *train);
 void onestep_2(Train *train);
@@ -79,11 +82,35 @@ void periodSending(int signo) {
     }
 } 
 
+void writeCSV (float onestep_duration, float period, Train* train) {
+    FILE *f;
+    
+    char filename[12];
+    sprintf(filename,"train_%d.csv", train->id);
+
+    if (train->initText) {
+        f = fopen(filename, "wb");
+        train->initText = 0;
+        fprintf(f, "onestep_duration,period,distance,vitesse_consigne,vitesse_reelle,vitesse_envoyee\n");
+    } else {
+        f = fopen(filename, "a+");
+        fprintf(f, "%0.4f,", onestep_duration);
+        fprintf(f, "%0.4f,", period);
+        fprintf(f, "%0.1f,", controle_v7_1_U.Distance);
+        fprintf(f, "%0.1f,", controle_v7_1_U.Vitesse_Consigne);
+        fprintf(f, "%0.1f,", controle_v7_1_U.Vitesse_Reelle);
+        fprintf(f, "%0.1f\n", controle_v7_1_Y.Vitesse_Envoyee);
+    }
+    fclose(f);
+}
+
+
 void onestep_1(Train *train)
 {
   static boolean_T OverrunFlag = false;
-  gettimeofday(&currentCall, NULL);
+  gettimeofday(&currentCall_1, NULL);
   // time between last call
+  float period = time_diff(&lastCall_1, &currentCall_1);
   //printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
 
   //printf("\nonestep_1 begin\n");
@@ -141,12 +168,13 @@ void onestep_1(Train *train)
 
   //printf("\nonestep end\n");
 
-  gettimeofday(&lastCall, NULL);
-  //printf("\nDuration of onestep: %0.8f\n", time_diff(&currentCall, &lastCall));
+  gettimeofday(&lastCall_1, NULL);
+  //printf("\nDuration of onestep: %0.8f\n", );
 
   /* Disable interrupts here */
   /* Restore FPU context here (if necessary) */
   /* Enable interrupts here */
+  writeCSV(time_diff(&currentCall_1, &lastCall_1), period, train);
 }
 
 void onestep_2(Train *train)
@@ -156,7 +184,9 @@ void onestep_2(Train *train)
 
   //printf("\nonestep_2 begin\n");
   //printf("Current train id: %d\n", train->id);
-
+  gettimeofday(&currentCall_2, NULL);
+  // time between last call
+  float period = time_diff(&lastCall_2, &currentCall_2);
   
 
   /* Disable interrupts here */
@@ -206,11 +236,13 @@ void onestep_2(Train *train)
   OverrunFlag = false;
 
 
-  //printf("\nonestep end\n");
+  gettimeofday(&lastCall_2, NULL);
+  //printf("\nDuration of onestep: %0.8f\n", );
 
   /* Disable interrupts here */
   /* Restore FPU context here (if necessary) */
   /* Enable interrupts here */
+  writeCSV(time_diff(&currentCall_2, &lastCall_2), period, train);
 }
 
 void * orderTrain2(Train * trains){
@@ -317,6 +349,7 @@ static Train * newTrain(int id, int pos, int speed, int sock) {
     train->order = 0;
     train->connected = 0;
     train->initialized = 0;
+    train->initText = 1;
     train->sock = sock;
 	train->nextTrain = NULL;
 	return train;
@@ -517,7 +550,8 @@ int main(int argc, char *argv[])
     trainsList=addTrain(0,-1,-1,-1,NULL);
 
 
-    gettimeofday(&lastCall, NULL);
+    gettimeofday(&lastCall_1, NULL);
+    gettimeofday(&lastCall_2, NULL);
 
     while ((new_socket = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c)))
     {

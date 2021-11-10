@@ -127,6 +127,7 @@ char * intToString(int node) {
 	return buffer; 
 }
 
+
 int sendData(int socket, int code, int id, int position, int speed) {
 	char data[MAX_MSG_SIZE] = "";
     strcat(data, intToString(code));
