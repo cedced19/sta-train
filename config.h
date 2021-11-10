@@ -5,7 +5,7 @@
 #define MESSAGE_END "$$"
 #define MAX_MSG_SIZE 256
 
-#define PORT_NUMBER 4242
+#define PORT_NUMBER 4244
 #define MAX_REQUEST 5
 #define DISTTOUR 17444
 

@@ -16,6 +16,7 @@ typedef struct train {
 	int connected;
 	int initText;
 	struct train *nextTrain;
+	struct timeval lastDisplay;
 } Train;
 
 Train * addTrain (int id, int pos, int speed, int sock, Train *trains);
