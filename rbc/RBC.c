@@ -23,10 +23,6 @@
 #include "controller_2/controle_v7_2.h"   
 
 
-
-
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
-
 struct timeval lastCall_1;
 struct timeval currentCall_1;
 
@@ -40,6 +36,24 @@ Train *trainsList=NULL;
 
 float time_diff(struct timeval *start, struct timeval *end) {
     return (end->tv_sec - start->tv_sec) + 1e-6*(end->tv_usec - start->tv_usec);
+}
+
+
+int socket_display=0;
+int isconnected_display=0;
+void sendDisplay(int code, int id, int pos, int speed, Train* train) {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    if(isconnected_display){
+        
+        if (time_diff(&(train->lastDisplay), &now)>0.5) {
+            //sendData(socket_display, code, id, pos, speed);
+            printf("Send display after %0.5f\n", time_diff(&(train->lastDisplay), &now));
+            gettimeofday(&(train->lastDisplay), NULL);
+        }
+        
+    }
+    
 }
 
 //////////////////////////////////////////
@@ -76,7 +90,8 @@ void periodSending(int signo) {
                 if (train->id == 2) {
                     controle_v7_2_terminate();
                 }
-            };
+            }
+            sendDisplay(6, train->id, train->pos, train->speed, train);
         }
         train = train->nextTrain;
     }
@@ -254,6 +269,7 @@ void * orderTrain2(Train * trains){
 }
 
 
+
 void* connection_handler(void *socket_desc){
     int sock = *(int*)socket_desc;
     char message[MAXLEN];
@@ -279,6 +295,12 @@ void* connection_handler(void *socket_desc){
                 while (list != NULL)
                 {
                     list = parseMessage(list, &code, &id, &pos, &speed);
+                    if (id==-1) {
+                        isconnected_display=1;
+                        //printf("%d\n", isconnected_display);
+                        socket_display=sock;
+                        continue; // the display do not send any messages
+                    }
                    
 
                     //printf("Responding new message from %i with code %i\n", id, code);
@@ -304,7 +326,7 @@ void* connection_handler(void *socket_desc){
                             Train * train = selectTrain(id, trainsList);
                             if (!train)
                             {
-                                trainsList =  addTrain(id, pos, speed, sock, trainsList); 
+                                trainsList = addTrain(id, pos, speed, sock, trainsList); 
                                 // pthread_mutex_lock(&mutex);
                                 orderTrain2(trainsList);
                                 // pthread_mutex_unlock(&mutex);
@@ -318,8 +340,10 @@ void* connection_handler(void *socket_desc){
                                 }
                             }
                             train->connected = 1;
+                            
                             //onestep(train);
                             //sendData(sock, 4, id, pos, train->speed); //send ack 
+                            sendDisplay(4, id, pos, speed, train);
                             break;
                         case 5: // send command
                             // printf("Speed request ack from train %i\n", id);
@@ -352,6 +376,7 @@ static Train * newTrain(int id, int pos, int speed, int sock) {
     train->initText = 1;
     train->sock = sock;
 	train->nextTrain = NULL;
+    gettimeofday(&train->lastDisplay, NULL);
 	return train;
 }
 
