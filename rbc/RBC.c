@@ -47,9 +47,8 @@ void periodSending(int signo) {
     Train* train = trainsList;
     //showTrains(train);
 	while(train != NULL) {
-        if (train->pos != -1 && train->id != 0) {
+        if (train->pos != -1 && train->id != 0 && train->connected == 1) {
             if (train->initialized == 0) {
-                printf("Initializing\n");
                 if (train->id == 1) {
                     controle_v7_1_initialize();
                 }
@@ -65,7 +64,16 @@ void periodSending(int signo) {
                 onestep_2(train);
             }
             
-            sendData(train->sock, 6, train->id, train->pos, train->speed);
+            if(sendData(train->sock, 6, train->id, train->pos, train->speed) == 0) {
+                train->connected = 0;
+                train->initialized = 0;
+                if (train->id == 1) {
+                    controle_v7_1_terminate();
+                }
+                if (train->id == 2) {
+                    controle_v7_2_terminate();
+                }
+            };
         }
         train = train->nextTrain;
     }
@@ -76,10 +84,10 @@ void onestep_1(Train *train)
   static boolean_T OverrunFlag = false;
   gettimeofday(&currentCall, NULL);
   // time between last call
-  printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
+  //printf("\nTime between last call of onestep: %0.8f s\n", time_diff(&lastCall, &currentCall));
 
-  printf("\nonestep_1 begin\n");
-  printf("Current train id: %d\n", train->id);
+  //printf("\nonestep_1 begin\n");
+  //printf("Current train id: %d\n", train->id);
 
   
 
@@ -99,22 +107,22 @@ void onestep_1(Train *train)
   //if(train->order > )
   //train->pos-selectTrainByOrder()
 
-  int defaultDistance = 3000;
+  int defaultDistance = 4000;
   Train* train2 = selectTrain(2,trainsList);
   if (train2 != NULL) {
-      defaultDistance = 3000;
+      defaultDistance = 4000;
   } 
 
   controle_v7_1_U.Distance = defaultDistance;
-  controle_v7_1_U.Vitesse_Consigne = 25;
+  controle_v7_1_U.Vitesse_Consigne = 20;
   controle_v7_1_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_1_U.Light = 0;
 
   // Log all inputs
-  printf("Distance %f\n", controle_v7_1_U.Distance);
-  printf("Vitesse Consigne (Input) %f\n", controle_v7_1_U.Vitesse_Consigne);
-  printf("Vitesse Reelle %f\n", controle_v7_1_U.Vitesse_Reelle);
-  printf("Light %f\n", controle_v7_1_U.Light);
+  //printf("Distance %f\n", controle_v7_1_U.Distance);
+  //printf("Vitesse Consigne (Input) %f\n", controle_v7_1_U.Vitesse_Consigne);
+  ///printf("Vitesse Reelle %f\n", controle_v7_1_U.Vitesse_Reelle);
+  //printf("Light %f\n", controle_v7_1_U.Light);
 
   /* Step the model for base rate */
   controle_v7_1_step();
@@ -123,7 +131,7 @@ void onestep_1(Train *train)
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne (Output) %d\n", (int) controle_v7_1_Y.Vitesse_Envoyee);
+  //printf("Vitesse consigne (Output) %d\n", (int) controle_v7_1_Y.Vitesse_Envoyee);
 
   train->speed = (int)  controle_v7_1_Y.Vitesse_Envoyee;
 
@@ -131,10 +139,10 @@ void onestep_1(Train *train)
   OverrunFlag = false;
 
 
-  printf("\nonestep end\n");
+  //printf("\nonestep end\n");
 
   gettimeofday(&lastCall, NULL);
-  printf("\nDuration of onestep: %0.8f\n", time_diff(&currentCall, &lastCall));
+  //printf("\nDuration of onestep: %0.8f\n", time_diff(&currentCall, &lastCall));
 
   /* Disable interrupts here */
   /* Restore FPU context here (if necessary) */
@@ -146,8 +154,8 @@ void onestep_2(Train *train)
   static boolean_T OverrunFlag = false;
   // time between last call
 
-  printf("\nonestep_2 begin\n");
-  printf("Current train id: %d\n", train->id);
+  //printf("\nonestep_2 begin\n");
+  //printf("Current train id: %d\n", train->id);
 
   
 
@@ -165,22 +173,23 @@ void onestep_2(Train *train)
   /* Re-enable timer or interrupt here */
   /* Set model inputs here */
   
-  int defaultDistance = 3000;
+  int defaultDistance = 4000;
   Train* train1 = selectTrain(1,trainsList);
   if (train1 != NULL) {
-      defaultDistance = abs(train1->pos-train->pos)%(17354);
+      defaultDistance=train1->pos-train->pos;
+      if(defaultDistance<0) defaultDistance+=DISTTOUR;
   } 
 
   controle_v7_2_U.Distance = defaultDistance;
-  controle_v7_2_U.Vitesse_Consigne = 25;
+  controle_v7_2_U.Vitesse_Consigne = 35;
   controle_v7_2_U.Vitesse_Reelle = train->speedMeasured;
   controle_v7_2_U.Light = 0;
 
   // Log all inputs
   printf("Distance %f\n", controle_v7_2_U.Distance);
-  printf("Vitesse Consigne (Input) %f\n", controle_v7_2_U.Vitesse_Consigne);
-  printf("Vitesse Reelle %f\n", controle_v7_2_U.Vitesse_Reelle);
-  printf("Light %f\n", controle_v7_2_U.Light);
+  //printf("Vitesse Consigne (Input) %f\n", controle_v7_2_U.Vitesse_Consigne);
+  //printf("Vitesse Reelle %f\n", controle_v7_2_U.Vitesse_Reelle);
+  //printf("Light %f\n", controle_v7_2_U.Light);
 
   /* Step the model for base rate */
   controle_v7_2_step();
@@ -189,7 +198,7 @@ void onestep_2(Train *train)
 
   /* Get model outputs here */
   // Log all outputs here
-  printf("Vitesse consigne (Output) %d\n", (int) controle_v7_2_Y.Vitesse_Envoyee);
+  //printf("Vitesse consigne (Output) %d\n", (int) controle_v7_2_Y.Vitesse_Envoyee);
 
   train->speed = (int)  controle_v7_2_Y.Vitesse_Envoyee;
 
@@ -197,7 +206,7 @@ void onestep_2(Train *train)
   OverrunFlag = false;
 
 
-  printf("\nonestep end\n");
+  //printf("\nonestep end\n");
 
   /* Disable interrupts here */
   /* Restore FPU context here (if necessary) */
@@ -234,17 +243,17 @@ void* connection_handler(void *socket_desc){
             } else {
                 list = NULL;
                 list = splitMessages(list, message);
-                showList(list);
+                //showList(list);
                 while (list != NULL)
                 {
                     list = parseMessage(list, &code, &id, &pos, &speed);
                    
 
-                    printf("Responding new message from %i with code %i\n", id, code);
+                    //printf("Responding new message from %i with code %i\n", id, code);
                     switch(code){
 
                         case 1: // ack connection
-                            printf("Received initialization from train %i\n", id);
+                            //printf("Received initialization from train %i\n", id);
                             if (!selectTrain(id, trainsList))
                             {
                                 trainsList = addTrain(id, pos, speed, sock, trainsList);
@@ -254,11 +263,12 @@ void* connection_handler(void *socket_desc){
                                 // pthread_mutex_unlock(&mutex);
                                 //printf("after order train");
                             }
+                            trainsList->connected = 1;
                             sendData(sock, 2, id, -1, -1);
                             break;
                         case 3: // receive position/speed
                             // store data
-                            printf("Received speed/position from train %i\n", id);
+                            // printf("Received speed/position from train %i\n", id);
                             Train * train = selectTrain(id, trainsList);
                             if (!train)
                             {
@@ -271,12 +281,16 @@ void* connection_handler(void *socket_desc){
                             else
                             {
                                 storeData(id,pos,speed,trainsList);
+                                if (train->connected == 0) {
+                                    train->sock = sock;
+                                }
                             }
+                            train->connected = 1;
                             //onestep(train);
                             //sendData(sock, 4, id, pos, train->speed); //send ack 
                             break;
                         case 5: // send command
-                            printf("Speed request ack from train %i\n", id);
+                            // printf("Speed request ack from train %i\n", id);
                             break;
                         default:
                             break;
@@ -287,7 +301,7 @@ void* connection_handler(void *socket_desc){
                     //sendData(sock, 6, id, -1, 40);
 
                     //showList(list);
-                    printf("Message done!\n");
+                    //printf("Message done!\n");
                 };
             }
     } while(1);
@@ -301,6 +315,8 @@ static Train * newTrain(int id, int pos, int speed, int sock) {
 	train->pos = pos; 
 	train->speed = speed; 
     train->order = 0;
+    train->connected = 0;
+    train->initialized = 0;
     train->sock = sock;
 	train->nextTrain = NULL;
 	return train;
