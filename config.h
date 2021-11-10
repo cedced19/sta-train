@@ -142,7 +142,7 @@ int sendData(int socket, int code, int id, int position, int speed) {
         perror("Error writing message to socket");
         return 0;
     } else {
-        printf("Sending the following message : %s\n", data);
+        //printf("Sending the following message : %s\n", data);
         return 1;
     }
     return 0;
