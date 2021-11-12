@@ -16,3 +16,13 @@ make test-client-fake
 See Makefile to more information.
 
 [Youtube Videos](https://www.youtube.com/playlist?list=PLRohp2lBQ573M8j11N9RYrsu51QHPHMRh)
+
+Team:
+* Gregoire GAZEAU 
+* Joel Kalil PONTES
+* Yuzhe YAO
+* Isabela FARIA 
+* João Vitor PISNO
+* Cédric JUNG
+* Samuel MARCIANO
+* Thomas DEFFONTAINES
