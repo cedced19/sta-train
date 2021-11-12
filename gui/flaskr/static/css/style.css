@@ -1,0 +1,161 @@
+/* ------------------------------------------ Painel ------------------------------------------- */
+body {
+    background-image: url("/static/images/train.jpg");
+}
+
+body h1:first-child {
+    background-image: url("/static/images/train.jpg");
+    color:rgb(5, 0, 0);
+    font-size: 32px;
+    text-shadow: -1px -1px #eee, 1px 1px #888, -3px 0 4px #000;
+    font-family:"Segoe print", Arial, Helvetica, sans-serif;
+    font-weight:lighter;
+    -moz-box-shadow: 2px 2px 6px #888;  
+    -webkit-box-shadow: 2px 2px 6px #888;  
+    box-shadow:2px 2px 6px #888;
+    border-radius: 10px;
+    text-align:center;
+    display:block;
+    position: relative;
+    padding:10px;
+    margin:16px;
+    width: 40%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+#form {
+    margin-left: 15px;
+    font-size: 16px;
+}
+
+#Trains {
+    display: inline-block;
+    position: absolute;
+    left:0%;
+    top:12%;
+    width: 15%;
+}
+
+.trainSquare {
+    text-align: center;
+    width: auto;    
+    margin: 15px;
+    padding: 2px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    
+    border-style: solid;
+    border-width: 2px;
+    border-color: black;
+    border-radius: 10px;
+    background-color: rgb(248, 248, 248);
+}
+
+.trainSquare p, h3{
+    margin: 1px;
+}
+
+#Table {
+    background-color: rgb(248, 248, 248);
+    width: 25%;
+    height: 580px;
+    position: absolute;
+    top: 13.5%;
+    left: 16%;
+    display: inline-block;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: black;
+}
+
+#Map {
+    background-image: url("/static/images/Map.svg");
+    background-color: white;
+    width: 830px;
+    height: 580px;
+    position: absolute;
+    top: 13.5%;
+    left: 43%;
+    display: inline-block;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 2px;
+    border-color: black;
+}
+
+#MapExt {
+    background-image: url("/static/images/Map.svg");
+    background-color: white;
+    width: 1250px;
+    height: 880px;
+    border-width: 2px;
+    border-radius: 2px;
+    border-style: solid;
+    border-color: black;
+    position: relative;
+    top: 5%;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+#MapExt img{
+    max-width: 1240px;
+    max-height: 867px;
+}
+
+#Table p{
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.circle {
+    width: 25px;
+    height: 25px;
+    margin-left: 15px;
+    margin-top: 15px;
+    position: absolute;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+}
+
+#Graph {
+    font: 1rem 'Fira Sans', sans-serif;
+    max-width: 800px;
+    max-height: 800px;
+    border-width: 2px;
+    border-radius: 2px;
+    border-style: solid;
+    border-color: black;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%, 0);
+    display: none;
+    background-color: white; 
+}
+
+#Plot {
+    max-width: 800px;
+    max-height: 780px;
+    position: relative;
+
+}
+
+#Buttom a {
+    max-width: 800px;
+    max-height: 20px;
+    margin-top: 5px;
+}
+
+#Buttom a {
+    color: red;
+    padding-left: 20px;
+    padding-right: 10px;
+}
+
+#Buttom input {
+    padding-left: 50px;
+    padding-right: 10px;
+}

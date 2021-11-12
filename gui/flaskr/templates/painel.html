@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+        <title>Trains Interface</title>
+        <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/plotly-2.4.2.min.js') }}"></script>
+        
+    </head>
+    <body style="background-color: rgb(255, 255, 255)">
+
+        <h1 style="background-color: rgb(248, 248, 248)">
+            STA Trains Autonomes
+        </h1>
+
+        <form id='form' action="/getVitesse" method="POST">
+            <a>Train : </a>
+            <select name="train_leader" id="leader">
+                <option value="1">Train 1</option>
+                <option value="2">Train 2</option>
+                <option value="3">Train 3</option>
+                <option value="4">Train 4</option>
+                <option value="5">Train 5</option>
+                <option value="6">Train 6</option>
+            </select>
+            <a>Vitesse Consigne : </a>
+            <input type="text" name="vitesseConsigne"/>
+            <input type="submit" value="Envoyer"/>
+        </form>
+        
+       <div id="Trains"></div>
+
+        <div id="Table"></div>
+
+        <div id="Map" onclick="zoomer()">
+            
+            <svg id="svgDiv" viewBox="0 0 830 580" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            </svg>
+        </div>
+
+        <div id="Graph" style="display: none;">
+            <div id="Buttom">
+                <a id="close" onclick="removeGraph()">Close X</a>
+                <input type="checkbox" id="checkbox" name="checkbox" checked>
+                <label for="checkbox">Update</label>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    </body>
+</html>
